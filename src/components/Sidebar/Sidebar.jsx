@@ -5,12 +5,9 @@ import {
   FiGrid, 
   FiActivity, 
   FiUsers, 
-  FiMessageSquare, 
-  FiBarChart2,
+  FiMessageSquare,
   FiMenu,
-  FiX,
-  FiHome,
-  FiSettings
+  FiX
 } from 'react-icons/fi';
 
 const Sidebar = ({ activeSection, onSectionChange }) => {
@@ -41,12 +38,6 @@ const Sidebar = ({ activeSection, onSectionChange }) => {
       title: 'Ask AI Assistant',
       icon: <FiMessageSquare />,
       color: '#4299e1'
-    },
-    {
-      id: 'schoolAnalytics',
-      title: 'School Analytics',
-      icon: <FiBarChart2 />,
-      color: '#f56565'
     }
   ];
 
@@ -84,48 +75,19 @@ const Sidebar = ({ activeSection, onSectionChange }) => {
               <button
                 className={`nav-item ${activeSection === item.id ? 'active' : ''}`}
                 onClick={() => onSectionChange(item.id)}
-                style={{ 
-                  '--item-color': item.color,
-                  '--item-bg': `${item.color}20`
-                }}
+                style={{ '--item-color': item.color }}
               >
-                <span className="nav-icon">{item.icon}</span>
+                <span className="nav-icon" style={{ color: item.color }}>
+                  {item.icon}
+                </span>
                 {(!isCollapsed || isHovered) && (
                   <span className="nav-text">{item.title}</span>
-                )}
-                {activeSection === item.id && (
-                  <span className="active-indicator"></span>
                 )}
               </button>
             </li>
           ))}
         </ul>
-
-        {/* <div className="sidebar-footer">
-          <button className="nav-item">
-            <span className="nav-icon"><FiHome /></span>
-            {(!isCollapsed || isHovered) && (
-              <span className="nav-text">Dashboard</span>
-            )}
-          </button>
-          <button className="nav-item">
-            <span className="nav-icon"><FiSettings /></span>
-            {(!isCollapsed || isHovered) && (
-              <span className="nav-text">Settings</span>
-            )}
-          </button>
-        </div> */}
       </nav>
-
-      {/* <div className="sidebar-user">
-        <div className="user-avatar">👤</div>
-        {(!isCollapsed || isHovered) && (
-          <div className="user-info">
-            <p className="user-name">Admin User</p>
-            <p className="user-role">System Administrator</p>
-          </div>
-        )}
-      </div> */}
     </div>
   );
 };
