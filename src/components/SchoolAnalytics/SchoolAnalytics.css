@@ -1,0 +1,401 @@
+/* SchoolAnalytics.css - School Analytics Styling */
+
+.school-analytics-container {
+  animation: fadeIn 0.5s ease-out;
+}
+
+/* School Comparison Header */
+.school-comparison-header {
+  background: white;
+  border-radius: 16px;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.comparison-title {
+  font-size: 1.75rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin: 0;
+}
+
+.metric-selector {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.metric-selector label {
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.metric-select {
+  padding: 0.625rem 1rem;
+  border: 2px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  background: white;
+}
+
+.metric-select:hover {
+  border-color: var(--primary-color);
+}
+
+.metric-select:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+/* Top Schools Section */
+.top-schools-section {
+  background: white;
+  border-radius: 16px;
+  padding: 2rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+}
+
+.section-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 1.5rem;
+}
+
+/* Schools Table */
+.schools-table {
+  overflow-x: auto;
+}
+
+.table-header {
+  display: grid;
+  grid-template-columns: 80px 2fr 1fr 1fr 1fr 80px;
+  gap: 1rem;
+  padding: 1rem;
+  background: var(--bg-primary);
+  border-radius: 8px;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.table-row {
+  display: grid;
+  grid-template-columns: 80px 2fr 1fr 1fr 1fr 80px;
+  gap: 1rem;
+  padding: 1rem;
+  background: var(--bg-primary);
+  border-radius: 8px;
+  margin-bottom: 0.5rem;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  border: 2px solid transparent;
+}
+
+.table-row:hover {
+  background: white;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  transform: translateY(-2px);
+}
+
+.table-row.selected {
+  background: white;
+  border-color: var(--primary-color);
+  box-shadow: 0 4px 16px rgba(102, 126, 234, 0.15);
+}
+
+.table-cell {
+  display: flex;
+  align-items: center;
+  font-size: 0.95rem;
+}
+
+.rank-cell {
+  justify-content: center;
+}
+
+.rank {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+
+.rank-1 {
+  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+  color: white;
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+}
+
+.rank-2 {
+  background: linear-gradient(135deg, #a0aec0 0%, #718096 100%);
+  color: white;
+}
+
+.rank-3 {
+  background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
+  color: white;
+}
+
+.rank:not(.rank-1):not(.rank-2):not(.rank-3) {
+  background: var(--bg-primary);
+  color: var(--text-secondary);
+}
+
+.school-name {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.metric-value {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.value {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.mini-progress {
+  height: 6px;
+  background: #e2e8f0;
+  border-radius: 3px;
+  overflow: hidden;
+  width: 80px;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+  transition: width 1s ease-out;
+  animation: fillBar 1.5s ease-out;
+}
+
+.trend-cell {
+  justify-content: center;
+}
+
+.trend-up {
+  color: var(--success-color);
+  font-size: 1.25rem;
+}
+
+.trend-down {
+  color: var(--danger-color);
+  font-size: 1.25rem;
+}
+
+.trend-stable {
+  color: var(--text-muted);
+  font-size: 1.25rem;
+}
+
+.selection-hint {
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.875rem;
+  margin-top: 1rem;
+  font-style: italic;
+}
+
+/* Charts Grid */
+.charts-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+  margin-bottom: 2rem;
+}
+
+@media (max-width: 1200px) {
+  .charts-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.chart-container {
+  background: white;
+  border-radius: 16px;
+  padding: 2rem;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+  min-height: 400px;
+}
+
+.trend-chart {
+  position: relative;
+}
+
+.radar-chart {
+  position: relative;
+}
+
+/* Analytics Insights */
+.analytics-insights {
+  margin-top: 2rem;
+}
+
+.insights-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 1.5rem;
+}
+
+.insights-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1.25rem;
+}
+
+.insight-card {
+  background: white;
+  border-radius: 16px;
+  padding: 1.5rem;
+  text-align: center;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+  border: 2px solid transparent;
+}
+
+.insight-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+}
+
+.insight-card.positive {
+  background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+  border-color: var(--success-color);
+}
+
+.insight-card.positive:hover {
+  box-shadow: 0 8px 25px rgba(16, 185, 129, 0.2);
+}
+
+.insight-card.warning {
+  background: linear-gradient(135deg, #fed7aa 0%, #fdba74 100%);
+  border-color: var(--warning-color);
+}
+
+.insight-card.warning:hover {
+  box-shadow: 0 8px 25px rgba(249, 115, 22, 0.2);
+}
+
+.insight-card.info {
+  background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+  border-color: var(--info-color);
+}
+
+.insight-card.info:hover {
+  box-shadow: 0 8px 25px rgba(59, 130, 246, 0.2);
+}
+
+.insight-card.success {
+  background: linear-gradient(135deg, #ede9fe 0%, #ddd6fe 100%);
+  border-color: var(--primary-color);
+}
+
+.insight-card.success:hover {
+  box-shadow: 0 8px 25px rgba(139, 92, 246, 0.2);
+}
+
+.insight-icon {
+  font-size: 2.5rem;
+  margin-bottom: 1rem;
+  animation: bounce 2s ease-in-out infinite;
+}
+
+.insight-card h4 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0 0 0.5rem 0;
+}
+
+.insight-card p {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* Responsive Design */
+@media (max-width: 1200px) {
+  .table-header,
+  .table-row {
+    grid-template-columns: 60px 1.5fr 1fr 1fr 1fr 60px;
+  }
+}
+
+@media (max-width: 768px) {
+  .school-comparison-header {
+    flex-direction: column;
+    gap: 1rem;
+    text-align: center;
+  }
+  
+  .table-header {
+    display: none;
+  }
+  
+  .table-row {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+    padding: 1.5rem;
+  }
+  
+  .table-cell {
+    justify-content: space-between;
+  }
+  
+  .table-cell::before {
+    content: attr(data-label);
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    font-size: 0.75rem;
+  }
+  
+  .rank-cell {
+    justify-content: center;
+    margin-bottom: 1rem;
+  }
+  
+  .rank-cell::before {
+    display: none;
+  }
+}
+
+/* Animations */
+@keyframes fillBar {
+  from {
+    width: 0 !important;
+  }
+}
+
+@keyframes bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
