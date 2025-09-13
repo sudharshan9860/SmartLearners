@@ -1,167 +1,79 @@
+// ===== UPDATED TEACHER ACTION COMPONENT =====
+// src/components/TeacherAction/TeacherAction.jsx
+
 import React, { useState, useEffect } from 'react';
 import './TeacherAction.css';
 import { 
-  FiUser, 
-  FiBook, 
   FiUsers, 
-  FiMessageCircle, 
+  FiFileText, 
   FiCheckCircle,
   FiClock,
   FiTrendingUp,
-  FiAward,
-  FiBarChart2,
   FiActivity,
-  FiFileText,
-  FiEdit3,
-  FiTarget,
-  FiStar
+  FiBook,
+  FiEdit3
 } from 'react-icons/fi';
+import ApiService from '../../services/apiService';
+import DataTransformer from '../../utils/dataTransformer';
+import FilterBar from '../common/FilterBar';
 
-const TeacherAction = ({ filters = {} }) => {
-  const [teacherData, setTeacherData] = useState(null);
+const TeacherAction = ({ filters }) => {
   const [loading, setLoading] = useState(false);
-
-  // Set default values for filters
-  const currentFilters = {
-    school: filters.school || 'All Schools',
-    schoolBlock: filters.schoolBlock || 'All Blocks',
-    class: filters.class || 'All Classes',
-    section: filters.section || 'All Sections'
-  };
+  const [teacherData, setTeacherData] = useState(null);
+  const [selectedClass, setSelectedClass] = useState('Minds_9th');
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    // Simulate data loading when filters change
-    if (currentFilters.school !== 'All Schools' && 
-        currentFilters.schoolBlock !== 'All Blocks' && 
-        currentFilters.class !== 'All Classes' && 
-        currentFilters.section !== 'All Sections') {
+    loadTeacherData();
+  }, [selectedClass, filters]);
+
+  const loadTeacherData = async () => {
+    try {
       setLoading(true);
-      setTimeout(() => {
-        setTeacherData({
-          name: 'Ms. Anita Desai',
-          role: 'Biology Teacher',
-          school: currentFilters.school,
-          block: currentFilters.schoolBlock,
-          class: currentFilters.class,
-          section: currentFilters.section
-        });
-        setLoading(false);
-      }, 500);
-    } else {
-      setTeacherData(null);
+      setError(null);
+      
+      const schoolLogs = await ApiService.getSchoolLogs();
+      const transformedData = DataTransformer.transformTeacherData(schoolLogs, selectedClass);
+      setTeacherData(transformedData);
+    } catch (err) {
+      console.error('Failed to load teacher data:', err);
+      setError(err.message);
+    } finally {
+      setLoading(false);
     }
-  }, [currentFilters.school, currentFilters.schoolBlock, currentFilters.class, currentFilters.section]);
+  };
 
-  const stats = [
-    { 
-      icon: <FiEdit3 />, 
-      value: 23, 
-      label: 'Homework Created',
-      color: '#8B5CF6',
-      bgColor: 'rgba(139, 92, 246, 0.1)'
-    },
-    { 
-      icon: <FiBook />, 
-      value: 18, 
-      label: 'Classwork Given',
-      color: '#3B82F6',
-      bgColor: 'rgba(59, 130, 246, 0.1)'
-    },
-    { 
-      icon: <FiBarChart2 />, 
-      value: 156, 
-      label: 'Student Analytics Checked',
-      color: '#10B981',
-      bgColor: 'rgba(16, 185, 129, 0.1)'
-    },
-    { 
-      icon: <FiMessageCircle />, 
-      value: 47, 
-      label: 'Chatbot Interactions',
-      color: '#F59E0B',
-      bgColor: 'rgba(245, 158, 11, 0.1)'
-    },
-  ];
+  const handleClassChange = (newClass) => {
+    setSelectedClass(newClass);
+  };
 
-  const assignments = [
-    {
-      type: 'HOMEWORK CREATED',
-      title: 'Mathematics - Chapter 4: Quadratic Equations',
-      class: '7th A, B, C',
-      due: 'Tomorrow 16:00',
-      questions: '5 questions selected from question bank',
-      submitted: 32,
-      pending: 13,
-      total: 45,
-      time: 'Today, 14:25',
-      color: '#8B5CF6'
-    },
-    {
-      type: 'CLASSWORK UPLOAD',
-      title: 'Mathematics - Class Exercise',
-      class: '7th B',
-      due: '10:30 AM',
-      questions: '8 questions',
-      submitted: 28,
-      pending: 0,
-      total: 28,
-      time: '10:30 AM',
-      color: '#3B82F6'
-    },
-    {
-      type: 'WORKSHEET SHARED',
-      title: 'Mathematics - Practice Problems',
-      class: '7th C',
-      due: 'Next Week',
-      questions: '15 practice problems',
-      worksheetsCreated: 35,
-      time: 'Yesterday, 16:45',
-      color: '#10B981'
-    }
-  ];
+  if (loading) {
+    return (
+      <div className="loading-container">
+        <div className="loading-spinner"></div>
+        <p className="loading-text">Loading teacher data...</p>
+      </div>
+    );
+  }
 
-  const mostUsedFeatures = [
-    { name: 'Chatbot Data Fetch', count: 18, percentage: 90 },
-    { name: 'View Classwork Submissions', count: 12, percentage: 60 },
-    { name: 'View Homework Submissions', count: 10, percentage: 50 },
-    { name: 'Create Homework', count: 8, percentage: 40 },
-    { name: 'Auto Submit Homework', count: 5, percentage: 25 },
-    { name: 'Create/Submit Classwork', count: 3, percentage: 15 }
-  ];
+  if (error) {
+    return (
+      <div className="error-container">
+        <p className="error-message">Error: {error}</p>
+        <button onClick={loadTeacherData} className="retry-btn">Retry</button>
+      </div>
+    );
+  }
 
-  const topStudents = [
-    { id: '9MMB55', name: 'Rahul Kumar', calls: 56, level: 'high', avatar: '👨‍🎓' },
-    { id: '9MMB46', name: 'Priya Sharma', calls: 42, level: 'medium', avatar: '👩‍🎓' },
-    { id: '9MMB49', name: 'Arjun Singh', calls: 40, level: 'medium', avatar: '👨‍🎓' },
-    { id: '9MMB42', name: 'Anita Patel', calls: 35, level: 'medium', avatar: '👩‍🎓' },
-    { id: '9MMB48', name: 'Vijay Reddy', calls: 32, level: 'medium', avatar: '👨‍🎓' },
-    { id: '9MMB66', name: 'Sneha Gupta', calls: 28, level: 'low', avatar: '👩‍🎓' },
-    { id: '9MMB41', name: 'Amit Verma', calls: 25, level: 'low', avatar: '👨‍🎓' },
-    { id: '9MMB61', name: 'Kavita Nair', calls: 22, level: 'low', avatar: '👩‍🎓' },
-    { id: '9MMB52', name: 'Ravi Mehta', calls: 20, level: 'low', avatar: '👨‍🎓' },
-    { id: '9MMB56', name: 'Pooja Joshi', calls: 18, level: 'low', avatar: '👩‍🎓' }
-  ];
-
-  if (!teacherData && !loading) {
+  if (!teacherData) {
     return (
       <div className="teacher-action-container">
         <div className="selection-prompt">
           <div className="prompt-icon">
             <FiUsers className="icon-large" />
           </div>
-          <h2>Select Filters to View Teacher Details</h2>
-          <p>Please select School, School Block, Class, and Section to view teacher information</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (loading) {
-    return (
-      <div className="teacher-action-container">
-        <div className="loading-container">
-          <div className="loading-spinner"></div>
-          <p>Loading teacher data...</p>
+          <h2>Select a Class to View Teacher Details</h2>
+          <p>Please select a class from the filter above</p>
         </div>
       </div>
     );
@@ -169,157 +81,148 @@ const TeacherAction = ({ filters = {} }) => {
 
   return (
     <div className="teacher-action-container">
-      {/* Teacher Profile Card */}
-      <div className="teacher-profile-card">
-        <div className="profile-background">
-          <div className="profile-pattern"></div>
+      {/* Header Section */}
+      <div className="teacher-header">
+        <h2>Teacher Action Details</h2>
+        <div className="class-selector">
+          <select 
+            value={selectedClass} 
+            onChange={(e) => handleClassChange(e.target.value)}
+            className="filter-select"
+          >
+            {Object.entries(DataTransformer.CLASS_MAPPING).map(([key, value]) => (
+              <option key={key} value={key}>{value.display}</option>
+            ))}
+          </select>
         </div>
-        <div className="profile-content">
-          <div className="profile-avatar">
-            <span className="avatar-text">
-              {teacherData.name.split(' ').map(n => n[0]).join('')}
+      </div>
+
+      {/* Teacher Info Card */}
+      <div className="teacher-info-card">
+        <div className="teacher-avatar">
+          <FiUsers />
+        </div>
+        <div className="teacher-details">
+          <h3>{teacherData.teachers.length > 0 ? teacherData.teachers[0] : 'No Teacher Assigned'}</h3>
+          <p className="teacher-class">{teacherData.className}</p>
+          <div className="teacher-stats">
+            <span className="stat">
+              <FiUsers /> {teacherData.totalStudents} Active / {teacherData.expectedStudents} Expected Students
             </span>
           </div>
-          <div className="profile-info">
-            <h2 className="teacher-name">{teacherData.name}</h2>
-            <p className="teacher-details">
-              {teacherData.role} | {teacherData.school} - {teacherData.block}
-            </p>
-            <p className="teacher-class-info">
-              <span className="info-badge">Class: {teacherData.class}</span>
-              <span className="info-badge">Section: {teacherData.section}</span>
-            </p>
-          </div>
         </div>
       </div>
 
-      {/* Stats Grid */}
-      <div className="stats-grid">
-        {stats.map((stat, index) => (
-          <div 
-            key={index} 
-            className="stat-card"
-            style={{ 
-              '--stat-color': stat.color,
-              '--stat-bg': stat.bgColor,
-              '--delay': `${index * 0.1}s` 
-            }}
-          >
-            <div className="stat-icon" style={{ color: stat.color, background: stat.bgColor }}>
-              {stat.icon}
-            </div>
-            <div className="stat-content">
-              <h3 className="stat-value" style={{ color: stat.color }}>{stat.value}</h3>
-              <p className="stat-label">{stat.label}</p>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {/* Assignment Creation Activity */}
-      <div className="assignment-section">
-        <div className="section-header">
-          <h2 className="section-title">
-            <span className="title-icon">📝</span>
-            Assignment Creation Activity
-          </h2>
-        </div>
-        
-        <div className="assignments-grid">
-          {assignments.map((assignment, index) => (
-            <div 
-              key={index} 
-              className="assignment-card"
-              style={{ 
-                '--border-color': assignment.color,
-                '--delay': `${index * 0.15}s` 
-              }}
-            >
-              <div className="assignment-header">
-                <span className="assignment-type" style={{ color: assignment.color }}>
-                  {assignment.type}
-                </span>
-                <span className="assignment-time">{assignment.time}</span>
-              </div>
-              
-              <h3 className="assignment-title">{assignment.title}</h3>
-              
-              <div className="assignment-details">
-                <div className="detail-row">
-                  <span className="detail-label">CLASS</span>
-                  <span className="detail-value">{assignment.class}</span>
-                </div>
-                <div className="detail-row">
-                  <span className="detail-label">DUE</span>
-                  <span className="detail-value">{assignment.due}</span>
-                </div>
-                <div className="detail-row">
-                  <span className="detail-label">QUESTIONS</span>
-                  <span className="detail-value">{assignment.questions}</span>
-                </div>
-              </div>
-
-              {assignment.type === 'WORKSHEET SHARED' ? (
-                <div className="worksheet-stats">
-                  <div className="worksheet-created">
-                    <FiFileText className="stat-icon" />
-                    <span className="stat-number">{assignment.worksheetsCreated}</span>
-                    <span className="stat-text">Worksheets Created</span>
-                  </div>
-                </div>
-              ) : (
-                <div className="submission-stats">
-                  <div className="submission-progress">
-                    <div className="progress-labels">
-                      <span className="submitted">
-                        <FiCheckCircle /> {assignment.submitted} Submitted
-                      </span>
-                      {assignment.pending > 0 && (
-                        <span className="pending">
-                          <FiClock /> {assignment.pending} Pending
-                        </span>
-                      )}
-                    </div>
-                    <div className="progress-bar">
-                      <div 
-                        className="progress-fill"
-                        style={{ 
-                          width: `${(assignment.submitted / assignment.total) * 100}%`,
-                          background: assignment.pending === 0 ? '#10B981' : `linear-gradient(90deg, #10B981 ${(assignment.submitted / assignment.total) * 100}%, #F59E0B 0%)`
-                        }}
-                      ></div>
-                    </div>
-                    <div className="total-count">
-                      Total: <strong>{assignment.total}</strong>
-                      {assignment.pending === 0 && <span className="all-completed">✨ All students completed!</span>}
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Features and Students Analytics */}
-      <div className="analytics-section">
-        {/* Most Used Features */}
-        <div className="features-card">
-          <div className="card-header">
-            <h3 className="card-title">
-              <span className="title-icon">🔥</span>
-              Most Used Features
+      {/* Key Metrics Grid */}
+      <div className="metrics-grid">
+        {/* Homework Statistics */}
+        <div className="metric-card homework-card">
+          <div className="metric-header">
+            <h3>
+              <FiFileText /> Homework Assignments
             </h3>
-            <span className="badge">Teacher Features</span>
           </div>
-          
-          <div className="features-list">
-            {mostUsedFeatures.map((feature, index) => (
-              <div 
-                key={index} 
-                className="feature-item"
-                style={{ '--delay': `${index * 0.1}s` }}
-              >
+          <div className="metric-content">
+            <div className="metric-row">
+              <span className="metric-label">Created</span>
+              <span className="metric-value">{teacherData.homeworkStats.created}</span>
+            </div>
+            <div className="metric-row">
+              <span className="metric-label">Submitted</span>
+              <span className="metric-value success">{teacherData.homeworkStats.submitted}</span>
+            </div>
+            <div className="metric-row">
+              <span className="metric-label">Pending</span>
+              <span className="metric-value warning">{teacherData.homeworkStats.pending}</span>
+            </div>
+            
+            {/* Submission Progress Bar */}
+            <div className="submission-progress">
+              <div className="progress-header">
+                <span>Completion Rate</span>
+                <span className="progress-percentage">{teacherData.homeworkStats.completionRate}%</span>
+              </div>
+              <div className="progress-bar">
+                <div 
+                  className="progress-fill"
+                  style={{ 
+                    width: `${teacherData.homeworkStats.completionRate}%`,
+                    background: parseFloat(teacherData.homeworkStats.completionRate) > 80 ? '#10b981' : 
+                              parseFloat(teacherData.homeworkStats.completionRate) > 50 ? '#f59e0b' : '#ef4444'
+                  }}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Worksheet Statistics */}
+        <div className="metric-card worksheet-card">
+          <div className="metric-header">
+            <h3>
+              <FiEdit3 /> Worksheets Created
+            </h3>
+          </div>
+          <div className="metric-content centered">
+            <div className="big-number">
+              {teacherData.worksheetStats.total}
+            </div>
+            <p className="metric-subtitle">Total Worksheets</p>
+            <div className="metric-row">
+              <span className="metric-label">This Week</span>
+              <span className="metric-value">{teacherData.worksheetStats.thisWeek}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Recent Activities Timeline */}
+      <div className="activities-section">
+        <h3 className="section-title">
+          <FiClock /> Recent Teacher Activities
+        </h3>
+        <div className="activities-timeline">
+          {teacherData.activities.length === 0 ? (
+            <div className="no-activities">
+              <p>No recent activities</p>
+            </div>
+          ) : (
+            teacherData.activities.map((activity, index) => (
+              <div key={index} className="activity-item">
+                <div className="activity-icon">{activity.icon}</div>
+                <div className="activity-content">
+                  <div className="activity-header">
+                    <h4>{activity.action}</h4>
+                    <span className={`activity-status ${activity.status}`}>
+                      {activity.status === 'success' ? <FiCheckCircle /> : null}
+                    </span>
+                  </div>
+                  <div className="activity-meta">
+                    <span className="activity-teacher">{activity.teacher}</span>
+                    <span className="activity-time">
+                      {new Date(activity.timestamp).toLocaleString()}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      </div>
+
+      {/* Feature Usage Analysis */}
+      <div className="features-section">
+        <h3 className="section-title">
+          <FiTrendingUp /> Most Used Features
+        </h3>
+        <div className="features-list">
+          {teacherData.mostUsedFeatures.length === 0 ? (
+            <div className="no-features">
+              <p>No feature usage data available</p>
+            </div>
+          ) : (
+            teacherData.mostUsedFeatures.map((feature, index) => (
+              <div key={index} className="feature-item">
                 <div className="feature-info">
                   <span className="feature-rank">#{index + 1}</span>
                   <span className="feature-name">{feature.name}</span>
@@ -327,77 +230,40 @@ const TeacherAction = ({ filters = {} }) => {
                 </div>
                 <div className="feature-bar">
                   <div 
-                    className="bar-fill"
+                    className="feature-fill"
                     style={{ 
                       width: `${feature.percentage}%`,
-                      background: `linear-gradient(90deg, ${index < 3 ? '#8B5CF6' : '#3B82F6'} 0%, ${index < 3 ? '#EC4899' : '#06B6D4'} 100%)`
+                      background: index < 3 ? 
+                        'linear-gradient(90deg, #8b5cf6 0%, #a78bfa 100%)' : 
+                        'linear-gradient(90deg, #3b82f6 0%, #60a5fa 100%)'
                     }}
-                  >
-                    <span className="bar-value">{feature.percentage}%</span>
-                  </div>
+                  />
                 </div>
               </div>
-            ))}
-          </div>
+            ))
+          )}
         </div>
+      </div>
 
-        {/* Top 10 Most Active Students */}
-        <div className="students-card">
-          <div className="card-header">
-            <h3 className="card-title">
-              <span className="title-icon">🏆</span>
-              Top 10 Most Active Students
-            </h3>
-            <div className="legend">
-              <span className="legend-item high"><span className="dot"></span>High</span>
-              <span className="legend-item medium"><span className="dot"></span>Medium</span>
-              <span className="legend-item low"><span className="dot"></span>Low</span>
-            </div>
+      {/* Student Activity Summary */}
+      <div className="students-summary">
+        <h3 className="section-title">
+          <FiActivity /> Class Activity Overview
+        </h3>
+        <div className="summary-cards">
+          <div className="summary-card">
+            <span className="summary-label">Active Students</span>
+            <span className="summary-value">{teacherData.totalStudents}</span>
           </div>
-          
-          <div className="students-list">
-            {topStudents.map((student, index) => (
-              <div 
-                key={student.id} 
-                className={`student-item ${student.level}`}
-                style={{ '--delay': `${index * 0.08}s` }}
-              >
-                <div className="student-rank">
-                  {index === 0 && <FiAward className="trophy gold" />}
-                  {index === 1 && <FiAward className="trophy silver" />}
-                  {index === 2 && <FiAward className="trophy bronze" />}
-                  {index > 2 && <span className="rank-number">{index + 1}</span>}
-                </div>
-                
-                <div className="student-avatar">{student.avatar}</div>
-                
-                <div className="student-info">
-                  <p className="student-name">{student.name}</p>
-                  <p className="student-id">{student.id}</p>
-                </div>
-                
-                <div className="student-stats">
-                  <div className="calls-bar">
-                    <div 
-                      className="calls-fill"
-                      style={{ 
-                        width: `${(student.calls / 60) * 100}%`,
-                        background: student.level === 'high' ? 'linear-gradient(90deg, #EF4444 0%, #F59E0B 100%)' : 
-                                   student.level === 'medium' ? 'linear-gradient(90deg, #F59E0B 0%, #FCD34D 100%)' :
-                                   'linear-gradient(90deg, #FCD34D 0%, #FDE68A 100%)'
-                      }}
-                    ></div>
-                  </div>
-                  <span className="calls-count">{student.calls} calls</span>
-                </div>
-                
-                {index < 3 && (
-                  <div className="achievement-badge">
-                    <FiStar className="star-icon" />
-                  </div>
-                )}
-              </div>
-            ))}
+          <div className="summary-card">
+            <span className="summary-label">Expected Students</span>
+            <span className="summary-value">{teacherData.expectedStudents}</span>
+          </div>
+          <div className="summary-card">
+            <span className="summary-label">Participation Rate</span>
+            <span className="summary-value">
+              {((teacherData.totalStudents / teacherData.expectedStudents) * 100).toFixed(1)}%
+            </span>
           </div>
         </div>
       </div>
