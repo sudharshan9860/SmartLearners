@@ -17,11 +17,20 @@ import ApiService from '../../services/apiService';
 import DataTransformer from '../../utils/dataTransformer';
 import FilterBar from '../common/FilterBar';
 
-const TeacherAction = ({ filters }) => {
+const TeacherAction = ({ filters, apiHealthy }) => {
   const [loading, setLoading] = useState(false);
   const [teacherData, setTeacherData] = useState(null);
   const [selectedClass, setSelectedClass] = useState('Minds_9th');
   const [error, setError] = useState(null);
+  
+useEffect(() => {
+    if (apiHealthy) {
+      loadTeacherData();
+    } else {
+      setTeacherData(null);
+      setError('Backend not healthy (check /health). Skipping heavy calls.');
+    }
+  }, [selectedClass, filters, apiHealthy]);
 
   useEffect(() => {
     loadTeacherData();

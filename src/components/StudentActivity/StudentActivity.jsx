@@ -11,13 +11,21 @@ import {
 import ApiService from '../../services/apiService';
 import DataTransformer from '../../utils/dataTransformer';
 
-const StudentActivity = ({ filters }) => {
+const StudentActivity = ({ filters, apiHealthy }) => {
   const [loading, setLoading] = useState(false);
   const [students, setStudents] = useState([]);
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [studentDetails, setStudentDetails] = useState(null);
   const [selectedClass, setSelectedClass] = useState('Minds_9th');
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+
+useEffect(() => {
+    if (apiHealthy) {
+      loadClassStudents();
+    } else {
+      setStudents([]);
+    }
+  }, [selectedClass, selectedDate, apiHealthy]);
 
   useEffect(() => {
     loadClassStudents();

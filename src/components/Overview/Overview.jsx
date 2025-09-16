@@ -34,27 +34,36 @@ ChartJS.register(
   Legend
 );
 
-const Overview = ({ filters }) => {
+const Overview = ({ filters, apiHealthy }) => {
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState(null);
   const [error, setError] = useState(null);
 
+   useEffect(() => {
+    if (apiHealthy) {
+      loadDashboardData();
+      const interval = setInterval(loadDashboardData, 5 * 60 * 1000);
+      return () => clearInterval(interval);
+    } else {
+      setError('Backend not healthy (check /health). Skipping heavy calls.');
+      setLoading(false);
+    }
+  }, [filters, apiHealthy]);
+
   useEffect(() => {
     loadDashboardData();
-    const interval = setInterval(loadDashboardData, 5 * 60 * 1000); // Refresh every 5 minutes
+    const interval = setInterval(loadDashboardData, 30 * 60 * 1000); // Refresh every 30 minutes
     return () => clearInterval(interval);
   }, [filters]);
 
-  const loadDashboardData = async () => {
+   const loadDashboardData = async () => {
     try {
       setLoading(true);
       setError(null);
-      
       const [dailyRollups, schoolLogs] = await Promise.all([
         ApiService.getDailyRollups(),
-        ApiService.getSchoolLogs()
+        ApiService.getSchoolLogs(),
       ]);
-      
       const transformedData = DataTransformer.transformForOverview(dailyRollups, schoolLogs);
       setData(transformedData);
     } catch (err) {

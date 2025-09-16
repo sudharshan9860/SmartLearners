@@ -14,7 +14,8 @@ import TestConnection from './components/TestConnection';
 
 function App() {
   const [activeSection, setActiveSection] = useState('overview');
-  const [apiHealth, setApiHealth] = useState(null);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+const [apiHealth, setApiHealth] = useState(null); // 'healthy' | 'unhealthy' | null
   const [filters, setFilters] = useState({
     school: 'All Schools',
     schoolBlock: 'All Blocks',
@@ -28,15 +29,14 @@ function App() {
   }, []);
 
   const checkAPIHealth = async () => {
-    try {
-      const health = await ApiService.getHealth();
-      setApiHealth(health.status);
-      console.log('API Health:', health);
-    } catch (error) {
-      console.error('API Health Check Failed:', error);
-      setApiHealth('unhealthy');
-    }
-  };
+  try {
+    const health = await ApiService.getHealth(); // returns {status: 'healthy'|'unhealthy', ...}
+    setApiHealth(health.status);
+  } catch (error) {
+    console.error('API Health Check Failed:', error);
+    setApiHealth('unhealthy');
+  }
+};
 
   const handleFilterChange = (filterType, value) => {
     setFilters(prev => ({
@@ -46,23 +46,32 @@ function App() {
   };
 
   const renderSection = () => {
-    switch (activeSection) {
-      case 'overview':
-        return <Overview filters={filters} />;
-      case 'studentActivity':
-        return <StudentActivity filters={filters} />;
-      case 'teacherAction':
-        return <TeacherAction filters={filters} />;
-      case 'aiAssistant':
-        return <AIAssistant filters={filters} />;
+  const apiHealthy = apiHealth === 'healthy';
+  switch (activeSection) {
+    case 'overview':
+      return <Overview apiHealthy={apiHealthy} filters={filters} />;
+    case 'studentActivity':
+      return <StudentActivity apiHealthy={apiHealthy} filters={filters} />;
+    case 'teacherAction':
+      return <TeacherAction apiHealthy={apiHealthy} filters={filters} />;
+    case 'aiAssistant':
+        return <AIAssistant apiHealthy={apiHealthy} filters={filters} />;
       case 'schoolAnalytics':
-        return <SchoolAnalytics filters={filters} />;
+        return <SchoolAnalytics apiHealthy={apiHealthy} filters={filters} />;
       default:
-        return <Overview filters={filters} />;
+        return <Overview apiHealthy={apiHealthy} filters={filters} />;
     }
   };
 
   const showFilterBar = activeSection === 'teacherAction';
+
+  <button 
+  className="menu-toggle" 
+  onClick={() => setSidebarOpen(!sidebarOpen)}
+  style={{ display: window.innerWidth <= 768 ? 'block' : 'none' }}
+>
+  ☰
+</button>
 
   return (
     <div className="App">
