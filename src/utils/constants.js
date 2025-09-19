@@ -1,52 +1,35 @@
-// constants.js
-export const CONSTANTS = {
-  // API Endpoints (for future use)
-  API_BASE_URL: process.env.REACT_APP_API_URL || 'http://localhost:3001/api',
-  
-  // Chart Colors
-  CHART_COLORS: {
-    primary: '#667eea',
-    secondary: '#764ba2',
-    success: '#48bb78',
-    warning: '#f6ad55',
-    danger: '#f56565',
-    info: '#4299e1'
+// vite.config.js
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+
+// https://vitejs.dev/config/
+export default defineConfig({
+  plugins: [react()],
+  server: {
+    port: 5173,
+    open: true,
+    // Configure proxy for API calls
+    proxy: {
+      '/api': {
+        target: 'http://139.59.30.88',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api/, ''),
+        configure: (proxy, options) => {
+          // Log proxy requests for debugging
+          proxy.on('proxyReq', (proxyReq, req, res) => {
+            console.log('Proxying:', req.method, req.url, '→', options.target + proxyReq.path);
+          });
+          proxy.on('error', (err, req, res) => {
+            console.error('Proxy error:', err);
+          });
+        }
+      }
+    }
   },
-  
-  // Status Types
-  STATUS: {
-    ACTIVE: 'active',
-    COMPLETED: 'completed',
-    PENDING: 'pending',
-    RESOLVED: 'resolved',
-    SCHEDULED: 'scheduled',
-    APPROVED: 'approved'
+  // Handle CORS in development
+  define: {
+    'process.env': process.env
   },
-  
-  // User Roles
-  ROLES: {
-    ADMIN: 'admin',
-    TEACHER: 'teacher',
-    STUDENT: 'student',
-    PARENT: 'parent'
-  },
-  
-  // Time Formats
-  TIME_FORMAT: {
-    SHORT: 'HH:mm',
-    LONG: 'HH:mm:ss',
-    DATE: 'DD/MM/YYYY',
-    DATETIME: 'DD/MM/YYYY HH:mm'
-  },
-  
-  // Pagination
-  ITEMS_PER_PAGE: 10,
-  MAX_ITEMS_DISPLAY: 100,
-  
-  // Animation Durations
-  ANIMATION: {
-    FAST: 200,
-    NORMAL: 300,
-    SLOW: 500
-  }
-};
+  // Ensure environment variables are loaded
+  envPrefix: 'REACT_APP_'
+});

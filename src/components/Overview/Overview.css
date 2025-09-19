@@ -1,570 +1,464 @@
-/* Overview.css - Responsive & Colorful Final Version */
+/* Overview.css - Enhanced styles for better alignment and visual appeal */
 
-/* Container - Full Width Responsive */
 .overview-container {
-  width: 100%;
-  max-width: 100%;
-  padding: 1.5rem;
-  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  padding: 2rem;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
   min-height: 100vh;
-  animation: fadeIn 0.5s ease-out;
-  box-sizing: border-box;
 }
 
-/* Section Heading */
-.section-heading {
-  font-size: clamp(1.25rem, 2.5vw, 1.75rem);
-  font-weight: 700;
-  color: #2d3748;
-  margin-bottom: 1.5rem;
+/* Insights Dashboard Section */
+.insights-dashboard {
+  margin-bottom: 3rem;
+}
+
+.insights-header {
   display: flex;
   align-items: center;
   gap: 0.75rem;
-}
-
-.emoji-icon {
-  font-size: clamp(1.5rem, 3vw, 2rem);
-  animation: bounce 2s infinite;
-}
-
-/* Insights Section - Responsive Grid */
-.insights-section {
   margin-bottom: 2rem;
-  width: 100%;
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #2d3748;
 }
 
 .insights-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
-  gap: 1.25rem;
-  width: 100%;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 3rem;
 }
 
 .insight-card {
   background: white;
   border-radius: 16px;
-  padding: clamp(1rem, 2vw, 1.5rem);
-  position: relative;
-  overflow: hidden;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  border: 3px solid transparent;
-  opacity: 0;
-  min-height: 160px;
-}
-
-.insight-card.animate-in {
-  animation: slideInUp 0.6s ease-out forwards;
-}
-
-.insight-card:hover {
-  transform: translateY(-6px) scale(1.02);
-  box-shadow: 0 16px 32px rgba(0, 0, 0, 0.12);
-}
-
-/* Insight Color Variants - More Vibrant */
-.insight-card.insight-purple {
-  background: linear-gradient(135deg, #f3e7fc 0%, #e9d5ff 100%);
-  border-color: #a855f7;
-}
-
-.insight-card.insight-yellow {
-  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
-  border-color: #fbbf24;
-}
-
-.insight-card.insight-blue {
-  background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
-  border-color: #3b82f6;
-}
-
-.insight-card.insight-green {
-  background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
-  border-color: #10b981;
-}
-
-.insight-icon-wrapper {
-  width: clamp(50px, 5vw, 60px);
-  height: clamp(50px, 5vw, 60px);
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 1rem;
-  font-size: clamp(1.5rem, 2.5vw, 1.75rem);
-  backdrop-filter: blur(10px);
-  transition: transform 0.3s ease;
-}
-
-.insight-purple .insight-icon-wrapper {
-  color: #a855f7;
-  background: rgba(168, 85, 247, 0.15);
-}
-
-.insight-yellow .insight-icon-wrapper {
-  color: #f59e0b;
-  background: rgba(245, 158, 11, 0.15);
-}
-
-.insight-blue .insight-icon-wrapper {
-  color: #3b82f6;
-  background: rgba(59, 130, 246, 0.15);
-}
-
-.insight-green .insight-icon-wrapper {
-  color: #10b981;
-  background: rgba(16, 185, 129, 0.15);
-}
-
-.insight-title {
-  font-size: clamp(0.7rem, 1.2vw, 0.875rem);
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: #64748b;
-  margin: 0 0 0.5rem 0;
-}
-
-.insight-value {
-  font-size: clamp(1.25rem, 2vw, 1.5rem);
-  font-weight: 700;
-  color: #1e293b;
-  margin: 0 0 0.25rem 0;
-}
-
-.insight-subtitle {
-  font-size: clamp(0.75rem, 1.2vw, 0.875rem);
-  color: #64748b;
-  margin: 0;
-}
-
-/* Schools Section - Responsive Table */
-.schools-section {
-  background: white;
-  border-radius: 16px;
-  padding: clamp(1rem, 2vw, 2rem);
-  margin-bottom: 2rem;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
-  animation: fadeIn 0.8s ease-out;
-  width: 100%;
-  overflow: hidden;
-}
-
-.schools-table-wrapper {
-  overflow-x: auto;
-  width: 100%;
-  -webkit-overflow-scrolling: touch;
-}
-
-.schools-table {
-  width: 100%;
-  min-width: 800px;
-  border-collapse: separate;
-  border-spacing: 0;
-}
-
-.schools-table thead tr {
-  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
-}
-
-.schools-table th {
-  padding: clamp(0.75rem, 1.5vw, 1rem);
-  text-align: left;
-  font-size: clamp(0.7rem, 1.2vw, 0.875rem);
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: #64748b;
-  border-bottom: 2px solid #e2e8f0;
-  white-space: nowrap;
-}
-
-.schools-table td {
-  padding: clamp(0.75rem, 1.5vw, 1rem);
-  border-bottom: 1px solid #f1f5f9;
-  font-size: clamp(0.875rem, 1.4vw, 1rem);
-}
-
-.schools-table tbody tr:hover {
-  background: linear-gradient(90deg, #f8fafc 0%, #f1f5f9 100%);
-}
-
-/* Rank Badges */
-.rank-badge {
-  width: clamp(35px, 4vw, 40px);
-  height: clamp(35px, 4vw, 40px);
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 700;
-  font-size: clamp(0.75rem, 1.2vw, 0.875rem);
-  color: white;
-  background: #94a3b8;
-}
-
-.rank-badge.rank-1 {
-  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
-  animation: pulse 2s infinite;
-  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.4);
-}
-
-.rank-badge.rank-2 {
-  background: linear-gradient(135deg, #9ca3af 0%, #6b7280 100%);
-}
-
-.rank-badge.rank-3 {
-  background: linear-gradient(135deg, #fb923c 0%, #f97316 100%);
-}
-
-/* Progress Bars */
-.progress-bar {
-  height: 6px;
-  background: #e2e8f0;
-  border-radius: 3px;
-  overflow: hidden;
-  margin-top: 4px;
-}
-
-.progress-fill {
-  height: 100%;
-  border-radius: 3px;
-  transition: width 1s ease-out;
-  animation: fillProgress 1.5s ease-out;
-}
-
-.progress-fill.blue {
-  background: linear-gradient(90deg, #3b82f6 0%, #2563eb 100%);
-}
-
-.progress-fill.purple {
-  background: linear-gradient(90deg, #a855f7 0%, #7c3aed 100%);
-}
-
-.progress-fill.green {
-  background: linear-gradient(90deg, #10b981 0%, #059669 100%);
-}
-
-.progress-fill.indigo {
-  background: linear-gradient(90deg, #6366f1 0%, #4f46e5 100%);
-}
-
-/* Enhanced Colorful Statistics Section */
-.statistics-section {
-  background: linear-gradient(135deg, #ffffff 0%, #f0f9ff 100%);
-  border-radius: 16px;
-  padding: clamp(1rem, 2vw, 2rem);
-  margin-bottom: 2rem;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  padding: 1.5rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
+  transition: all 0.3s ease;
   border: 2px solid transparent;
-  background-clip: padding-box;
   position: relative;
   overflow: hidden;
 }
 
-.statistics-section::before {
+.insight-card::before {
   content: '';
   position: absolute;
   top: 0;
   left: 0;
   right: 0;
   height: 4px;
-  background: linear-gradient(90deg, #10b981 0%, #3b82f6 25%, #a855f7 50%, #f59e0b 75%, #ef4444 100%);
-  animation: gradient-shift 3s ease infinite;
+  background: linear-gradient(90deg, var(--card-color, #667eea) 0%, var(--card-color-light, #764ba2) 100%);
 }
 
-.statistics-table-wrapper {
-  overflow-x: auto;
-  width: 100%;
-  -webkit-overflow-scrolling: touch;
+.insight-card.insight-purple {
+  --card-color: #9f7aea;
+  --card-color-light: #b794f4;
+  background: linear-gradient(135deg, rgba(159, 122, 234, 0.1) 0%, rgba(183, 148, 244, 0.05) 100%);
 }
 
-.statistics-table {
-  width: 100%;
-  min-width: 700px;
-  border-collapse: separate;
-  border-spacing: 0 8px;
+.insight-card.insight-yellow {
+  --card-color: #f6ad55;
+  --card-color-light: #f6e05e;
+  background: linear-gradient(135deg, rgba(246, 173, 85, 0.1) 0%, rgba(246, 224, 94, 0.05) 100%);
 }
 
-.statistics-table.colorful thead tr {
-  background: linear-gradient(135deg, #818cf8 0%, #c084fc 50%, #f472b6 100%);
+.insight-card.insight-blue {
+  --card-color: #4299e1;
+  --card-color-light: #63b3ed;
+  background: linear-gradient(135deg, rgba(66, 153, 225, 0.1) 0%, rgba(99, 179, 237, 0.05) 100%);
 }
 
-.statistics-table.colorful th {
-  padding: clamp(0.75rem, 1.5vw, 1rem);
-  text-align: left;
-  font-size: clamp(0.7rem, 1.2vw, 0.875rem);
-  font-weight: 700;
-  color: white;
+.insight-card.insight-green {
+  --card-color: #48bb78;
+  --card-color-light: #68d391;
+  background: linear-gradient(135deg, rgba(72, 187, 120, 0.1) 0%, rgba(104, 211, 145, 0.05) 100%);
+}
+
+.insight-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.12);
+}
+
+.insight-icon-wrapper {
+  font-size: 2.5rem;
+  margin-bottom: 1rem;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+}
+
+.insight-label {
+  font-size: 0.75rem;
+  font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  border: none;
+  color: #718096;
+  margin-bottom: 0.5rem;
 }
 
-.statistics-table tbody tr {
+.insight-value {
+  font-size: 1.875rem;
+  font-weight: 700;
+  color: #2d3748;
+  margin-bottom: 0.25rem;
+}
+
+.insight-subtitle {
+  font-size: 0.875rem;
+  color: #718096;
+}
+
+/* Top Performing Schools Section */
+.top-schools-section {
   background: white;
-  border-radius: 8px;
-  margin: 4px 0;
-  transition: all 0.3s ease;
-}
-
-.statistics-table tbody tr.stat-excellent {
-  background: linear-gradient(90deg, #f0fdf4 0%, #dcfce7 100%);
-  border-left: 4px solid #10b981;
-}
-
-.statistics-table tbody tr.stat-poor {
-  background: linear-gradient(90deg, #fef2f2 0%, #fee2e2 100%);
-  border-left: 4px solid #ef4444;
-}
-
-.statistics-table tbody tr.stat-critical {
-  background: linear-gradient(90deg, #fef2f2 0%, #fecaca 100%);
-  border-left: 4px solid #dc2626;
-}
-
-.statistics-table tbody tr:hover {
-  transform: translateX(8px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-}
-
-.statistics-table td {
-  padding: clamp(0.75rem, 1.5vw, 1rem);
-  font-size: clamp(0.875rem, 1.4vw, 1rem);
-}
-
-/* Colorful Badges in Statistics */
-.grade-badge {
-  padding: 0.25rem 0.75rem;
-  background: linear-gradient(135deg, #818cf8 0%, #a78bfa 100%);
-  color: white;
   border-radius: 20px;
-  font-size: clamp(0.75rem, 1.2vw, 0.875rem);
+  padding: 2rem;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+  margin-bottom: 3rem;
+}
+
+.section-heading {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #2d3748;
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid #e2e8f0;
+}
+
+.emoji-icon {
+  font-size: 1.75rem;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+}
+
+/* Enhanced Table Styles */
+.schools-table-container {
+  overflow-x: auto;
+  margin: -0.5rem;
+  padding: 0.5rem;
+}
+
+.schools-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 0.9rem;
+}
+
+.schools-table thead {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.schools-table thead tr th {
+  padding: 1rem;
+  text-align: left;
   font-weight: 600;
-  display: inline-block;
+  font-size: 0.8rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  position: sticky;
+  top: 0;
+  z-index: 10;
 }
 
-.active-students-badge {
-  padding: 0.25rem 0.5rem;
-  background: linear-gradient(135deg, #34d399 0%, #10b981 100%);
-  color: white;
-  border-radius: 8px;
+.schools-table thead tr th:first-child {
+  border-top-left-radius: 12px;
+}
+
+.schools-table thead tr th:last-child {
+  border-top-right-radius: 12px;
+}
+
+.schools-table tbody tr {
+  transition: all 0.3s ease;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.schools-table tbody tr:hover {
+  background: linear-gradient(90deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%);
+  transform: scale(1.01);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.schools-table tbody tr td {
+  padding: 1.25rem 1rem;
+  color: #4a5568;
+  font-size: 0.95rem;
+  vertical-align: middle;
+}
+
+/* Rank Badge */
+.rank-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
   font-weight: 700;
-  display: inline-block;
-}
-
-.expected-students-badge {
-  padding: 0.25rem 0.5rem;
-  background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%);
+  font-size: 1rem;
   color: white;
-  border-radius: 8px;
-  font-weight: 700;
-  display: inline-block;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
-.participation-cell {
+.rank-1 {
+  background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+  color: #744210;
+}
+
+.rank-2 {
+  background: linear-gradient(135deg, #c0c0c0 0%, #d8d8d8 100%);
+  color: #4a5568;
+}
+
+.rank-3 {
+  background: linear-gradient(135deg, #cd7f32 0%, #e4a853 100%);
+  color: white;
+}
+
+.rank-badge:not(.rank-1):not(.rank-2):not(.rank-3) {
+  background: linear-gradient(135deg, #718096 0%, #a0aec0 100%);
+}
+
+/* School Name Styling */
+.school-name {
+  font-weight: 600;
+  font-size: 1rem;
+  color: #2d3748;
+}
+
+/* Progress Bars for Metrics */
+.metric-bar {
   display: flex;
   align-items: center;
   gap: 0.75rem;
 }
 
-.rate-value {
-  font-weight: 700;
-  font-size: clamp(0.9rem, 1.5vw, 1.1rem);
-  min-width: 60px;
-}
-
-.rate-value.high {
-  color: #10b981;
-  text-shadow: 0 0 10px rgba(16, 185, 129, 0.3);
-}
-
-.rate-value.medium {
-  color: #f59e0b;
-  text-shadow: 0 0 10px rgba(245, 158, 11, 0.3);
-}
-
-.rate-value.low {
-  color: #ef4444;
-  text-shadow: 0 0 10px rgba(239, 68, 68, 0.3);
-}
-
-.mini-progress {
+.progress-bar {
   flex: 1;
-  max-width: 100px;
   height: 8px;
   background: #e2e8f0;
-  border-radius: 4px;
+  border-radius: 999px;
   overflow: hidden;
+  position: relative;
 }
 
-.mini-progress-fill {
+.progress-fill {
   height: 100%;
-  border-radius: 4px;
-  transition: width 1s ease-out;
+  border-radius: 999px;
+  transition: width 1s ease;
+  background: linear-gradient(90deg, #48bb78 0%, #68d391 100%);
 }
 
-.mini-progress-fill.high {
-  background: linear-gradient(90deg, #10b981 0%, #34d399 100%);
+.progress-fill.medium {
+  background: linear-gradient(90deg, #f6ad55 0%, #f6e05e 100%);
 }
 
-.mini-progress-fill.medium {
-  background: linear-gradient(90deg, #f59e0b 0%, #fbbf24 100%);
+.progress-fill.low {
+  background: linear-gradient(90deg, #fc8181 0%, #f56565 100%);
 }
 
-.mini-progress-fill.low {
-  background: linear-gradient(90deg, #ef4444 0%, #f87171 100%);
+.metric-value {
+  min-width: 45px;
+  text-align: right;
+  font-weight: 600;
+  font-size: 0.9rem;
 }
 
-.teacher-badge {
+/* Trend Indicators */
+.trend-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
   padding: 0.25rem 0.75rem;
-  border-radius: 20px;
-  font-size: clamp(0.75rem, 1.2vw, 0.875rem);
-  font-weight: 700;
-  display: inline-block;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 600;
 }
 
-.teacher-badge.active {
-  background: linear-gradient(135deg, #34d399 0%, #10b981 100%);
-  color: white;
-  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+.trend-up {
+  background: #c6f6d5;
+  color: #22543d;
 }
 
-.teacher-badge.inactive {
-  background: linear-gradient(135deg, #f87171 0%, #ef4444 100%);
-  color: white;
-  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
+.trend-down {
+  background: #fed7d7;
+  color: #742a2a;
 }
 
-/* Chart Section - Responsive */
-.chart-section {
-  background: white;
-  border-radius: 16px;
-  padding: clamp(1rem, 2vw, 2rem);
-  margin-bottom: 2rem;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
-  width: 100%;
+.trend-stable {
+  background: #e2e8f0;
+  color: #4a5568;
 }
 
-.chart-wrapper {
-  height: clamp(300px, 40vw, 400px);
-  padding: 1rem;
-  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+/* Score Badge */
+.score-badge {
+  display: inline-flex;
+  padding: 0.5rem 1rem;
   border-radius: 12px;
-  margin-bottom: 1.5rem;
-}
-
-.chart-legend {
-  display: flex;
+  font-weight: 700;
+  font-size: 1.1rem;
+  min-width: 60px;
   justify-content: center;
-  gap: clamp(1rem, 2vw, 2rem);
-  flex-wrap: wrap;
 }
 
-.legend-item {
+.score-high {
+  background: linear-gradient(135deg, #48bb78 0%, #68d391 100%);
+  color: white;
+}
+
+.score-medium {
+  background: linear-gradient(135deg, #f6ad55 0%, #f6e05e 100%);
+  color: #744210;
+}
+
+.score-low {
+  background: linear-gradient(135deg, #fc8181 0%, #f56565 100%);
+  color: white;
+}
+
+/* Detailed Statistics Section */
+.statistics-section {
+  background: white;
+  border-radius: 20px;
+  padding: 2rem;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+  margin-bottom: 3rem;
+}
+
+.statistics-header {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  font-size: clamp(0.75rem, 1.2vw, 0.875rem);
-  color: #64748b;
+  gap: 0.75rem;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #2d3748;
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid;
+  border-image: linear-gradient(90deg, #667eea, #764ba2, #f6ad55, #48bb78, #4299e1) 1;
 }
 
-.legend-color {
-  width: 16px;
-  height: 16px;
-  border-radius: 4px;
+.statistics-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0 0.5rem;
 }
 
-.legend-color.high {
-  background: linear-gradient(135deg, #10b981 0%, #34d399 100%);
+.statistics-table thead tr th {
+  padding: 1rem;
+  text-align: left;
+  font-weight: 600;
+  font-size: 0.8rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #718096;
+  background: #f7fafc;
 }
 
-.legend-color.medium {
-  background: linear-gradient(135deg, #fb923c 0%, #fbbf24 100%);
+.statistics-table tbody tr {
+  background: white;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
+  transition: all 0.3s ease;
 }
 
-.legend-color.low {
-  background: linear-gradient(135deg, #ef4444 0%, #f87171 100%);
+.statistics-table tbody tr:hover {
+  transform: translateX(4px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
-/* Animations */
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+.statistics-table tbody tr td {
+  padding: 1.25rem 1rem;
+  vertical-align: middle;
 }
 
-@keyframes slideInUp {
-  from {
-    opacity: 0;
-    transform: translateY(30px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+.statistics-table tbody tr.low-participation {
+  background: linear-gradient(90deg, rgba(252, 129, 129, 0.1) 0%, rgba(245, 101, 101, 0.05) 100%);
 }
 
-@keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.7; }
+/* Grade Badge */
+.grade-badge {
+  display: inline-flex;
+  padding: 0.25rem 0.75rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
 }
 
-@keyframes bounce {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-10px); }
+/* Active Count Styling */
+.active-count {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #2d3748;
 }
 
-@keyframes fillProgress {
-  from { width: 0; }
+/* Teacher Count Badge */
+.teacher-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  font-weight: 700;
+  color: white;
 }
 
-@keyframes gradient-shift {
-  0%, 100% { transform: translateX(0); }
-  50% { transform: translateX(10px); }
+.teacher-count.active {
+  background: #48bb78;
 }
 
-/* Responsive Design - Mobile First */
-@media (max-width: 768px) {
-  .overview-container {
-    padding: 1rem;
+.teacher-count.inactive {
+  background: #fc8181;
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+  .insights-grid {
+    grid-template-columns: repeat(2, 1fr);
   }
   
+  .schools-table {
+    font-size: 0.85rem;
+  }
+  
+  .schools-table thead tr th,
+  .schools-table tbody tr td {
+    padding: 0.75rem 0.5rem;
+  }
+}
+
+@media (max-width: 640px) {
   .insights-grid {
     grid-template-columns: 1fr;
   }
   
-  .schools-table {
-    font-size: 0.75rem;
+  .schools-table-container {
+    margin: -1rem;
+    padding: 1rem;
   }
   
-  .schools-table th,
-  .schools-table td {
-    padding: 0.5rem;
-  }
-  
-  .statistics-table th,
-  .statistics-table td {
-    padding: 0.5rem;
-    font-size: 0.75rem;
-  }
-  
-  .chart-wrapper {
-    height: 250px;
-  }
-  
-  .chart-legend {
-    gap: 0.75rem;
+  .hide-mobile {
+    display: none;
   }
 }
 
-@media (min-width: 769px) and (max-width: 1024px) {
-  .insights-grid {
-    grid-template-columns: repeat(2, 1fr);
+/* Loading Animation */
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
   }
 }
 
-@media (min-width: 1025px) {
-  .insights-grid {
-    grid-template-columns: repeat(4, 1fr);
-  }
+.loading-shimmer {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
 }
