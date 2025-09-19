@@ -7,7 +7,6 @@ import TeacherAction from './components/TeacherAction/TeacherAction';
 import AIAssistant from './components/AIAssistant/AIAssistant';
 import SchoolAnalytics from './components/SchoolAnalytics/SchoolAnalytics';
 import Header from './components/common/Header';
-import FilterBar from './components/common/FilterBar';
 import ApiService from './services/apiService';
 import TestConnection from './components/TestConnection';
 
@@ -87,12 +86,6 @@ const [apiHealth, setApiHealth] = useState(null); // 'healthy' | 'unhealthy' | n
           </div>
         )}
         
-        {showFilterBar && (
-          <FilterBar 
-            filters={filters} 
-            onFilterChange={handleFilterChange}
-          />
-        )}
         <div className="content-wrapper">
           {renderSection()}
         </div>

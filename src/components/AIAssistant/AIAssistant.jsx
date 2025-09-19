@@ -350,12 +350,28 @@ const AIAssistant = ({ apiHealthy }) => {
         <h3>Quick Questions</h3>
         <div className="questions-grid">
           {[
-            "How many active students are there today?",
-            "What's the earliest date in our data?",
-            "Show me teacher activity statistics",
-            "How many total students do we have?",
-            "What's the data range available?",
-            "Show activity trends for this week"
+             "How many teachers are there?",
+        "From them, who was active today?",
+        "What did they do?",
+        "How many teachers created classwork?",
+        "Which teachers created classwork?",
+        "How many classwork were created?",
+        "Show me all classwork submissions",
+        "How many students were active today?",
+        "Which students were active today?",
+        "Who's using the AI chatbot today?",
+        "What homework was assigned today?",
+        "Show me teacher activities today",
+        "Which teachers reviewed homework today?",
+        "How many Grade 8 students used the Solve feature today?",
+        "Show me Grade 9 students who submitted homework today",
+        "List students in 8ILB who haven't been active this week",
+        "How many times did students use the chatbot today?",
+        "Which students used Auto-Correct today?",
+        "What did mohan@mmb do today?",
+        "Show me all teacher activities with counts",
+        "List those teachers",
+        "What are their IDs?"
           ].map((question, index) => (
             <button
               key={index}

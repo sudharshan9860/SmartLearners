@@ -1,7 +1,6 @@
 // SchoolAnalytics.jsx
 import React, { useState } from 'react';
 import './SchoolAnalytics.css';
-import FilterBar from '../common/FilterBar';
 import { schoolAnalyticsData } from '../../data/mockData';
 import { FiTrendingUp, FiTrendingDown, FiMinus } from 'react-icons/fi';
 import { Line, Radar } from 'react-chartjs-2';

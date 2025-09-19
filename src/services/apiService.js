@@ -1,12 +1,21 @@
 // src/services/apiService.js
-// Updated API Service with Chatbot Integration
+// Updated API Service with new chatbot URL
+
+import axios from 'axios';
+import config from '../config/apiConfig';
 
 class ApiService {
-  // Direct backend URL
-  static API_BASE_URL = 'http://139.59.30.88';
-  static CHAT_API_BASE_URL = 'http://127.0.0.1:8000'; // Update this to your actual chatbot API URL
+  // Base URLs from config
+  static BASE_URL = config.dashboard.baseUrl;
+  static CHAT_API_BASE_URL = config.chatbot.baseUrl; // Now using http://64.227.155.231:8000
   
-  // Helper method for fetch with retry
+  // Authentication credentials
+  static AUTH = {
+    username: process.env.REACT_APP_API_USERNAME || 'admin',
+    password: process.env.REACT_APP_API_PASSWORD || 'Orcalex@54321'
+  };
+
+  // Helper method for retrying failed requests
   static async fetchWithRetry(url, options = {}, retries = 3) {
     for (let i = 0; i < retries; i++) {
       try {
@@ -14,145 +23,122 @@ class ApiService {
           ...options,
           headers: {
             'Content-Type': 'application/json',
-            'Accept': 'application/json',
             ...options.headers
-          },
-          mode: 'cors',
-          credentials: 'omit'
+          }
         });
-
+        
         if (!response.ok) {
-          // Try to get error details from response
-          let errorDetail = '';
-          try {
-            const errorData = await response.json();
-            errorDetail = errorData.detail || errorData.message || JSON.stringify(errorData);
-            console.error('API Error Details:', errorData);
-          } catch (e) {
-            // Response body is not JSON
-            errorDetail = await response.text();
-          }
-          throw new Error(`HTTP error! status: ${response.status}, detail: ${errorDetail}`);
+          throw new Error(`HTTP error! status: ${response.status}`);
         }
-
-        const data = await response.json();
-        return data;
+        
+        return await response.json();
       } catch (error) {
-        console.error(`Attempt ${i + 1} failed for ${url}:`, error);
-        
-        if (i === retries - 1) {
-          if (error.message.includes('Failed to fetch')) {
-            throw new Error('Unable to connect to server. Please check your connection or try again later.');
-          }
-          throw error;
-        }
-        
-        // Don't retry on 400 errors - it's a client error
-        if (error.message.includes('status: 400')) {
-          throw error;
-        }
-        
-        await new Promise(resolve => setTimeout(resolve, 1000 * Math.pow(2, i)));
+        console.error(`Attempt ${i + 1} failed:`, error);
+        if (i === retries - 1) throw error;
+        await new Promise(resolve => setTimeout(resolve, 1000 * (i + 1)));
       }
     }
   }
 
-  // Existing API Methods
-  static async getDailyRollups() {
-    try {
-      return await this.fetchWithRetry(`${this.API_BASE_URL}/daily-rollups`);
-    } catch (error) {
-      console.error('Failed to fetch daily rollups:', error);
-      return {};
-    }
-  }
-
-  static async getSchoolLogs() {
-    try {
-      return await this.fetchWithRetry(`${this.API_BASE_URL}/school-logs`);
-    } catch (error) {
-      console.error('Failed to fetch school logs:', error);
-      return {};
-    }
-  }
-
-  static async getClassSummary(classKey, date = null) {
-    try {
-      const params = date ? `?date=${date}` : '';
-      return await this.fetchWithRetry(`${this.API_BASE_URL}/class-summary/${classKey}${params}`);
-    } catch (error) {
-      console.error('Failed to fetch class summary:', error);
-      return null;
-    }
-  }
-
-  static async getStudentActivity(username, date = null) {
-    try {
-      const params = date ? `?date=${date}` : '';
-      return await this.fetchWithRetry(`${this.API_BASE_URL}/student-activity/${username}${params}`);
-    } catch (error) {
-      console.error('Failed to fetch student activity:', error);
-      return null;
-    }
-  }
-
-  static async getClasses() {
-    try {
-      return await this.fetchWithRetry(`${this.API_BASE_URL}/classes`);
-    } catch (error) {
-      console.error('Failed to fetch classes:', error);
-      return [];
-    }
-  }
-
+  // Dashboard API Methods
   static async getHealth() {
     try {
-      return await this.fetchWithRetry(`${this.API_BASE_URL}/health`);
+      const response = await axios.get(`${this.BASE_URL}/health`, {
+        auth: this.AUTH
+      });
+      return response.data;
     } catch (error) {
       console.error('Health check failed:', error);
       return { status: 'unhealthy', error: error.message };
     }
   }
 
-  // ===== NEW CHATBOT API METHODS =====
-  
-  // Create a new chat session
+  static async getDailyRollups() {
+    try {
+      const response = await axios.get(`${this.BASE_URL}/daily-rollups`, {
+        auth: this.AUTH
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Failed to fetch daily rollups:', error);
+      throw error;
+    }
+  }
+
+  static async getSchoolLogs() {
+    try {
+      const response = await axios.get(`${this.BASE_URL}/school-logs`, {
+        auth: this.AUTH
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Failed to fetch school logs:', error);
+      throw error;
+    }
+  }
+
+  static async getStudentActivity(username, date) {
+    try {
+      const response = await axios.get(`${this.BASE_URL}/student-activity/${encodeURIComponent(username)}`,
+       {
+        params: { date },
+        auth: this.AUTH
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Failed to fetch student activity:', error);
+      throw error;
+    }
+  }
+
+  static async getClasses() {
+    try {
+      const response = await axios.get(`${this.BASE_URL}/classes`, {
+        auth: this.AUTH
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Failed to fetch classes:', error);
+      throw error;
+    }
+  }
+
+  // Chatbot API Methods - Using new server http://64.227.155.231:8000
   static async createChatSession() {
     try {
-      return await this.fetchWithRetry(
+      console.log('Creating chat session at:', `${this.CHAT_API_BASE_URL}/create-session`);
+      
+      const response = await this.fetchWithRetry(
         `${this.CHAT_API_BASE_URL}/create-session`,
         {
-          method: 'POST'
+          method: 'POST',
+          body: JSON.stringify({})
         }
       );
+      
+      console.log('Chat session created:', response);
+      return response;
     } catch (error) {
       console.error('Failed to create chat session:', error);
       throw error;
     }
   }
 
-  // Send a chat message
-  static async sendChatMessage(sessionId, question) {
+  static async sendChatMessage(sessionId, message) {
     try {
-      // The API expects exactly this format based on the schema
-      const requestBody = {
-        question: question,
-        session_id: sessionId
-      };
-      
-      console.log('Sending chat request:', requestBody);
+      console.log('Sending message to:', `${this.CHAT_API_BASE_URL}/chat`);
       
       const response = await this.fetchWithRetry(
         `${this.CHAT_API_BASE_URL}/chat`,
         {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json'
-          },
-          body: JSON.stringify(requestBody)
+          body: JSON.stringify({
+            session_id: sessionId,
+            question: message
+          })
         }
       );
+      
       return response;
     } catch (error) {
       console.error('Failed to send chat message:', error);
@@ -160,8 +146,7 @@ class ApiService {
     }
   }
 
-  // Get chat session history
-  static async getChatHistory(sessionId) {
+  static async getChatSession(sessionId) {
     try {
       return await this.fetchWithRetry(
         `${this.CHAT_API_BASE_URL}/session/${sessionId}`,
@@ -170,12 +155,11 @@ class ApiService {
         }
       );
     } catch (error) {
-      console.error('Failed to get chat history:', error);
+      console.error('Failed to get chat session:', error);
       throw error;
     }
   }
 
-  // Get chatbot statistics
   static async getChatbotStats() {
     try {
       return await this.fetchWithRetry(
@@ -190,7 +174,20 @@ class ApiService {
     }
   }
 
-  // Clear chat session
+  static async getDataFreshness() {
+    try {
+      return await this.fetchWithRetry(
+        `${this.CHAT_API_BASE_URL}/data-freshness`,
+        {
+          method: 'GET'
+        }
+      );
+    } catch (error) {
+      console.error('Failed to get data freshness:', error);
+      throw error;
+    }
+  }
+
   static async clearChatSession(sessionId) {
     try {
       return await this.fetchWithRetry(
@@ -205,7 +202,6 @@ class ApiService {
     }
   }
 
-  // Trigger data sync (admin function)
   static async triggerDataSync(apiKey) {
     try {
       return await this.fetchWithRetry(

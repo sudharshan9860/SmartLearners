@@ -1,5 +1,5 @@
 // src/config/apiConfig.js
-// Configuration file for API endpoints and settings
+// Updated Configuration file for API endpoints and settings
 
 const config = {
   // Main Dashboard API
@@ -15,10 +15,10 @@ const config = {
     }
   },
   
-  // Chatbot API
+  // Updated Chatbot API - Using new server
   chatbot: {
-    // Update this to your actual chatbot API URL in production
-    baseUrl: process.env.REACT_APP_CHATBOT_API_URL || 'http://127.0.0.1:8000',
+    // Updated to new chatbot API URL
+    baseUrl: process.env.REACT_APP_CHATBOT_API_URL || 'http://64.227.155.231',
     // Admin API key for data sync - should be stored securely in production
     adminApiKey: process.env.REACT_APP_ADMIN_API_KEY || 'admin-secret-key-123',
     endpoints: {
@@ -27,7 +27,8 @@ const config = {
       getSession: '/session',
       stats: '/stats',
       clearSession: '/clear',
-      sync: '/admin/sync'
+      sync: '/admin/sync',
+      dataFreshness: '/data-freshness'
     },
     // Chat configuration
     settings: {
@@ -79,29 +80,16 @@ const config = {
       "What assignments are pending?",
       "Display my progress this week"
     ]
+  },
+  
+  // Feature flags
+  features: {
+    enableDebug: process.env.REACT_APP_ENABLE_DEBUG === 'true',
+    enableMockData: process.env.REACT_APP_ENABLE_MOCK_DATA === 'true',
+    showSQLQueries: true,
+    enableAutoRefresh: true,
+    refreshInterval: 5 * 60 * 1000 // 5 minutes
   }
 };
 
-// Export configuration
 export default config;
-
-// Helper function to get API URL
-export const getApiUrl = (api, endpoint) => {
-  if (api === 'dashboard') {
-    return config.dashboard.baseUrl + config.dashboard.endpoints[endpoint];
-  } else if (api === 'chatbot') {
-    return config.chatbot.baseUrl + config.chatbot.endpoints[endpoint];
-  }
-  return null;
-};
-
-// Helper function to check data freshness
-export const getDataFreshnessStatus = (hoursAgo) => {
-  if (hoursAgo < config.dataFreshness.fresh) {
-    return { status: 'fresh', color: '#48bb78', label: 'Fresh' };
-  } else if (hoursAgo < config.dataFreshness.stale) {
-    return { status: 'stale', color: '#f6ad55', label: 'Stale' };
-  } else {
-    return { status: 'outdated', color: '#f56565', label: 'Outdated' };
-  }
-};
