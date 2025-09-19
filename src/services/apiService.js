@@ -1,13 +1,12 @@
 // src/services/apiService.js
-// Updated to connect directly to the backend server
+// Updated API Service with Chatbot Integration
 
 class ApiService {
-  // Direct backend URL - no localhost
+  // Direct backend URL
   static API_BASE_URL = 'http://139.59.30.88';
+  static CHAT_API_BASE_URL = 'http://127.0.0.1:8000'; // Update this to your actual chatbot API URL
   
-  // Alternative: Use environment variable for flexibility
-  // static API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://139.59.30.88';
-
+  // Helper method for fetch with retry
   static async fetchWithRetry(url, options = {}, retries = 3) {
     for (let i = 0; i < retries; i++) {
       try {
@@ -18,13 +17,22 @@ class ApiService {
             'Accept': 'application/json',
             ...options.headers
           },
-          // Important for CORS
           mode: 'cors',
-          credentials: 'omit' // or 'include' if you need cookies
+          credentials: 'omit'
         });
 
         if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
+          // Try to get error details from response
+          let errorDetail = '';
+          try {
+            const errorData = await response.json();
+            errorDetail = errorData.detail || errorData.message || JSON.stringify(errorData);
+            console.error('API Error Details:', errorData);
+          } catch (e) {
+            // Response body is not JSON
+            errorDetail = await response.text();
+          }
+          throw new Error(`HTTP error! status: ${response.status}, detail: ${errorDetail}`);
         }
 
         const data = await response.json();
@@ -33,26 +41,28 @@ class ApiService {
         console.error(`Attempt ${i + 1} failed for ${url}:`, error);
         
         if (i === retries - 1) {
-          // Better error handling
           if (error.message.includes('Failed to fetch')) {
             throw new Error('Unable to connect to server. Please check your connection or try again later.');
           }
           throw error;
         }
         
-        // Wait before retrying (exponential backoff)
+        // Don't retry on 400 errors - it's a client error
+        if (error.message.includes('status: 400')) {
+          throw error;
+        }
+        
         await new Promise(resolve => setTimeout(resolve, 1000 * Math.pow(2, i)));
       }
     }
   }
 
-  // API Methods with proper error handling
+  // Existing API Methods
   static async getDailyRollups() {
     try {
       return await this.fetchWithRetry(`${this.API_BASE_URL}/daily-rollups`);
     } catch (error) {
       console.error('Failed to fetch daily rollups:', error);
-      // Return empty data structure to prevent app crashes
       return {};
     }
   }
@@ -104,28 +114,112 @@ class ApiService {
     }
   }
 
-  // Test connection method for debugging
-  static async testConnection() {
-    console.log('Testing connection to:', this.API_BASE_URL);
+  // ===== NEW CHATBOT API METHODS =====
+  
+  // Create a new chat session
+  static async createChatSession() {
     try {
-      const response = await fetch(`${this.API_BASE_URL}/health`, {
-        method: 'GET',
-        mode: 'cors',
-        headers: {
-          'Accept': 'application/json'
+      return await this.fetchWithRetry(
+        `${this.CHAT_API_BASE_URL}/create-session`,
+        {
+          method: 'POST'
         }
-      });
-      
-      if (response.ok) {
-        console.log('✅ Connection successful!');
-        return true;
-      } else {
-        console.log('❌ Connection failed with status:', response.status);
-        return false;
-      }
+      );
     } catch (error) {
-      console.error('❌ Connection error:', error);
-      return false;
+      console.error('Failed to create chat session:', error);
+      throw error;
+    }
+  }
+
+  // Send a chat message
+  static async sendChatMessage(sessionId, question) {
+    try {
+      // The API expects exactly this format based on the schema
+      const requestBody = {
+        question: question,
+        session_id: sessionId
+      };
+      
+      console.log('Sending chat request:', requestBody);
+      
+      const response = await this.fetchWithRetry(
+        `${this.CHAT_API_BASE_URL}/chat`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          },
+          body: JSON.stringify(requestBody)
+        }
+      );
+      return response;
+    } catch (error) {
+      console.error('Failed to send chat message:', error);
+      throw error;
+    }
+  }
+
+  // Get chat session history
+  static async getChatHistory(sessionId) {
+    try {
+      return await this.fetchWithRetry(
+        `${this.CHAT_API_BASE_URL}/session/${sessionId}`,
+        {
+          method: 'GET'
+        }
+      );
+    } catch (error) {
+      console.error('Failed to get chat history:', error);
+      throw error;
+    }
+  }
+
+  // Get chatbot statistics
+  static async getChatbotStats() {
+    try {
+      return await this.fetchWithRetry(
+        `${this.CHAT_API_BASE_URL}/stats`,
+        {
+          method: 'GET'
+        }
+      );
+    } catch (error) {
+      console.error('Failed to get chatbot stats:', error);
+      throw error;
+    }
+  }
+
+  // Clear chat session
+  static async clearChatSession(sessionId) {
+    try {
+      return await this.fetchWithRetry(
+        `${this.CHAT_API_BASE_URL}/clear/${sessionId}`,
+        {
+          method: 'DELETE'
+        }
+      );
+    } catch (error) {
+      console.error('Failed to clear chat session:', error);
+      throw error;
+    }
+  }
+
+  // Trigger data sync (admin function)
+  static async triggerDataSync(apiKey) {
+    try {
+      return await this.fetchWithRetry(
+        `${this.CHAT_API_BASE_URL}/admin/sync`,
+        {
+          method: 'POST',
+          headers: {
+            'X-API-Key': apiKey
+          }
+        }
+      );
+    } catch (error) {
+      console.error('Failed to trigger data sync:', error);
+      throw error;
     }
   }
 }

@@ -1,163 +1,370 @@
-// AIAssistant.jsx
-import React, { useState } from 'react';
+// src/components/AIAssistant/AIAssistant.jsx
+import React, { useState, useEffect, useRef } from 'react';
 import './AIAssistant.css';
-import { aiAssistantData } from '../../data/mockData';
-import { FiSend, FiMic, FiPaperclip, FiThumbsUp, FiCopy } from 'react-icons/fi';
+import { 
+  FiSend, 
+  FiRefreshCw, 
+  FiTrash2, 
+  FiDatabase,
+  FiClock,
+  FiMessageCircle,
+  FiActivity,
+  FiAlertCircle,
+  FiCheckCircle,
+  FiUser,
+  FiCpu
+} from 'react-icons/fi';
+import ApiService from '../../services/apiService';
 
-const AIAssistant = ({ filters }) => {
-  const [message, setMessage] = useState('');
-  const [chatHistory, setChatHistory] = useState([
-    {
-      type: 'assistant',
-      message: "Hello! I'm your SmartLearners AI Assistant. I can help you with:\n• Analyzing student performance data\n• Understanding teacher engagement metrics\n• Identifying trends and patterns\n• Generating insights and recommendations\n• Answering questions about platform usage",
-      time: new Date().toLocaleTimeString()
+const AIAssistant = ({ apiHealthy }) => {
+  const [sessionId, setSessionId] = useState(null);
+  const [messages, setMessages] = useState([]);
+  const [inputMessage, setInputMessage] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [chatStats, setChatStats] = useState(null);
+  const [dataFreshness, setDataFreshness] = useState(null);
+  const [error, setError] = useState(null);
+  const messagesEndRef = useRef(null);
+
+  // Initialize chat session on mount
+  useEffect(() => {
+    if (apiHealthy) {
+      initializeChatSession();
+      loadChatStats();
     }
-  ]);
+  }, [apiHealthy]);
 
-  const { quickQuestions, insights } = aiAssistantData;
+  // Auto-scroll to bottom when messages change
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
 
-  const handleSendMessage = () => {
-    if (message.trim()) {
-      // Add user message
-      setChatHistory(prev => [...prev, {
-        type: 'user',
-        message: message,
-        time: new Date().toLocaleTimeString()
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  const initializeChatSession = async () => {
+    try {
+      console.log('Creating new chat session...');
+      const response = await ApiService.createChatSession();
+      console.log('Session created:', response);
+      
+      if (!response.session_id) {
+        throw new Error('No session ID received from server');
+      }
+      
+      setSessionId(response.session_id);
+      setMessages([{
+        id: Date.now(),
+        type: 'system',
+        content: 'Welcome to SmartLearners AI Assistant! Ask me about student activity data.',
+        timestamp: new Date()
       }]);
-
-      // Simulate AI response
-      setTimeout(() => {
-        setChatHistory(prev => [...prev, {
-          type: 'assistant',
-          message: `I've analyzed your query about "${message}". Based on the current data, here are my findings...`,
-          time: new Date().toLocaleTimeString()
-        }]);
-      }, 1000);
-
-      setMessage('');
+    } catch (err) {
+      console.error('Failed to initialize chat session:', err);
+      setError('Failed to start chat session. Please refresh and try again.');
     }
   };
 
-  const handleQuickQuestion = (question) => {
-    setMessage(question);
+  const loadChatStats = async () => {
+    try {
+      const stats = await ApiService.getChatbotStats();
+      setChatStats(stats);
+    } catch (err) {
+      console.error('Failed to load chat stats:', err);
+    }
+  };
+
+  const handleSendMessage = async () => {
+    if (!inputMessage.trim() || !sessionId || isLoading) return;
+
+    const userMessage = {
+      id: Date.now(),
+      type: 'user',
+      content: inputMessage,
+      timestamp: new Date()
+    };
+
+    setMessages(prev => [...prev, userMessage]);
+    setInputMessage('');
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      console.log('Sending message with session ID:', sessionId);
+      console.log('Message content:', userMessage.content);
+      
+      const response = await ApiService.sendChatMessage(sessionId, userMessage.content);
+      
+      console.log('Received response:', response);
+      
+      const botMessage = {
+        id: Date.now() + 1,
+        type: 'bot',
+        content: response.answer,
+        data: response.data,
+        sql: response.sql,
+        timestamp: new Date(),
+        dataFreshness: response.data_freshness
+      };
+
+      setMessages(prev => [...prev, botMessage]);
+      setDataFreshness(response.data_freshness);
+      
+      // Update stats after successful message
+      loadChatStats();
+    } catch (err) {
+      console.error('Failed to send message:', err);
+      const errorMessage = {
+        id: Date.now() + 1,
+        type: 'error',
+        content: `Sorry, I encountered an error: ${err.message}. Please try again.`,
+        timestamp: new Date()
+      };
+      setMessages(prev => [...prev, errorMessage]);
+      setError('Failed to send message. Please check your connection.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleKeyPress = (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSendMessage();
+    }
+  };
+
+  const handleClearSession = async () => {
+    if (!sessionId) return;
+    
+    try {
+      await ApiService.clearChatSession(sessionId);
+      setMessages([]);
+      initializeChatSession();
+    } catch (err) {
+      console.error('Failed to clear session:', err);
+      setError('Failed to clear chat session.');
+    }
+  };
+
+  const handleSyncData = async () => {
+    try {
+      setIsLoading(true);
+      // You'll need to provide the actual API key or get it from config
+      const apiKey = 'admin-secret-key-123'; // Replace with actual API key management
+      await ApiService.triggerDataSync(apiKey);
+      
+      const syncMessage = {
+        id: Date.now(),
+        type: 'system',
+        content: 'Data sync initiated successfully. Fresh data will be available shortly.',
+        timestamp: new Date()
+      };
+      setMessages(prev => [...prev, syncMessage]);
+      
+      // Reload stats after sync
+      setTimeout(loadChatStats, 5000);
+    } catch (err) {
+      console.error('Failed to sync data:', err);
+      setError('Failed to trigger data sync. Admin privileges required.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const formatTimestamp = (date) => {
+    return new Date(date).toLocaleTimeString('en-US', { 
+      hour: '2-digit', 
+      minute: '2-digit' 
+    });
+  };
+
+  const getFreshnessColor = (hours) => {
+    if (hours < 1) return '#48bb78'; // Green
+    if (hours < 4) return '#f6ad55'; // Orange
+    return '#f56565'; // Red
   };
 
   return (
     <div className="ai-assistant-container">
+      {/* Header Section */}
       <div className="ai-header">
-        <div className="ai-avatar">
-          <span className="ai-icon">🤖</span>
+        <div className="ai-title-section">
+          <FiCpu className="ai-icon" />
+          <div>
+            <h2>AI Assistant - Student Activity Analytics</h2>
+            <p className="ai-subtitle">Ask questions about student data and get instant insights</p>
+          </div>
         </div>
-        <div className="ai-info">
-          <h2 className="ai-title">AI Assistant for SmartLearners Analytics</h2>
-          <p className="ai-subtitle">Ask me anything about your platform data, student performance, teacher activities, or get insights!</p>
+        
+        <div className="ai-actions">
+          <button 
+            className="ai-action-btn sync-btn" 
+            onClick={handleSyncData}
+            disabled={isLoading}
+            title="Sync Data"
+          >
+            <FiRefreshCw className={isLoading ? 'spinning' : ''} />
+          </button>
+          <button 
+            className="ai-action-btn clear-btn" 
+            onClick={handleClearSession}
+            title="Clear Chat"
+          >
+            <FiTrash2 />
+          </button>
         </div>
       </div>
 
-      <div className="ai-content">
-        <div className="chat-section">
-          <div className="chat-history">
-            {chatHistory.map((chat, index) => (
-              <div 
-                key={index} 
-                className={`chat-message ${chat.type}`}
-                style={{ '--delay': `${index * 0.1}s` }}
-              >
-                <div className="message-avatar">
-                  {chat.type === 'assistant' ? '🤖' : '👤'}
-                </div>
-                <div className="message-content">
-                  <p className="message-text">{chat.message}</p>
-                  <div className="message-actions">
-                    <span className="message-time">{chat.time}</span>
-                    {chat.type === 'assistant' && (
-                      <>
-                        <button className="action-btn" title="Copy">
-                          <FiCopy />
-                        </button>
-                        <button className="action-btn" title="Like">
-                          <FiThumbsUp />
-                        </button>
-                      </>
-                    )}
-                  </div>
-                </div>
-              </div>
-            ))}
+      {/* Stats Cards */}
+      <div className="ai-stats-grid">
+        <div className="ai-stat-card">
+          <div className="stat-icon-wrapper blue">
+            <FiMessageCircle />
           </div>
-
-          <div className="chat-input-container">
-            <div className="chat-input-wrapper">
-              <input
-                type="text"
-                className="chat-input"
-                placeholder="Ask me anything about your SmartLearners data..."
-                value={message}
-                onChange={(e) => setMessage(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
-              />
-              <div className="input-actions">
-                <button className="input-btn" title="Attach file">
-                  <FiPaperclip />
-                </button>
-                <button className="input-btn" title="Voice input">
-                  <FiMic />
-                </button>
-                <button 
-                  className="send-btn"
-                  onClick={handleSendMessage}
-                  disabled={!message.trim()}
-                >
-                  <FiSend />
-                </button>
-              </div>
-            </div>
+          <div className="stat-content">
+            <span className="stat-label">Active Students</span>
+            <span className="stat-value">{chatStats?.total?.students || 0}</span>
           </div>
         </div>
 
-        <div className="assistant-sidebar">
-          <div className="quick-questions">
-            <h3 className="sidebar-title">Quick Questions:</h3>
-            <div className="questions-list">
-              {quickQuestions.map((q) => (
-                <button
-                  key={q.id}
-                  className="question-btn"
-                  onClick={() => handleQuickQuestion(q.question)}
-                >
-                  <span className="question-icon">{q.icon}</span>
-                  <span className="question-text">{q.question}</span>
-                </button>
-              ))}
-            </div>
+        <div className="ai-stat-card">
+          <div className="stat-icon-wrapper green">
+            <FiActivity />
           </div>
+          <div className="stat-content">
+            <span className="stat-label">Active Teachers</span>
+            <span className="stat-value">{chatStats?.total?.teachers || 0}</span>
+          </div>
+        </div>
 
-          <div className="ai-insights">
-            <h3 className="sidebar-title">Latest Insights</h3>
-            <div className="insights-list">
-              {insights.map((insight, index) => (
-                <div 
-                  key={index}
-                  className={`insight-card ${insight.type}`}
-                >
-                  <h4 className="insight-title">{insight.title}</h4>
-                  <p className="insight-description">{insight.description}</p>
+        <div className="ai-stat-card">
+          <div className="stat-icon-wrapper purple">
+            <FiDatabase />
+          </div>
+          <div className="stat-content">
+            <span className="stat-label">Data Points</span>
+            <span className="stat-value">
+              {chatStats?.data_range ? 
+                `${new Date(chatStats.data_range.earliest).toLocaleDateString()} - ${new Date(chatStats.data_range.latest).toLocaleDateString()}` 
+                : 'Loading...'}
+            </span>
+          </div>
+        </div>
+
+        <div className="ai-stat-card">
+          <div className="stat-icon-wrapper" style={{ backgroundColor: dataFreshness?.is_fresh ? '#e8f5e9' : '#ffebee' }}>
+            <FiClock style={{ color: getFreshnessColor(dataFreshness?.hours_ago || 0) }} />
+          </div>
+          <div className="stat-content">
+            <span className="stat-label">Data Freshness</span>
+            <span className="stat-value" style={{ color: getFreshnessColor(dataFreshness?.hours_ago || 0) }}>
+              {dataFreshness ? `${dataFreshness.hours_ago.toFixed(1)} hours ago` : 'Checking...'}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* Chat Interface */}
+      <div className="ai-chat-container">
+        <div className="chat-messages">
+          {messages.map((message) => (
+            <div key={message.id} className={`message ${message.type}`}>
+              <div className="message-avatar">
+                {message.type === 'user' ? <FiUser /> : 
+                 message.type === 'bot' ? <FiCpu /> : 
+                 message.type === 'error' ? <FiAlertCircle /> : 
+                 <FiCheckCircle />}
+              </div>
+              <div className="message-content">
+                <div className="message-text">{message.content}</div>
+                {message.data && (
+                  <div className="message-data">
+                    <pre>{JSON.stringify(message.data, null, 2)}</pre>
+                  </div>
+                )}
+                {message.sql && (
+                  <details className="message-sql">
+                    <summary>View SQL Query</summary>
+                    <code>{message.sql}</code>
+                  </details>
+                )}
+                <span className="message-time">{formatTimestamp(message.timestamp)}</span>
+              </div>
+            </div>
+          ))}
+          {isLoading && (
+            <div className="message bot loading">
+              <div className="message-avatar"><FiCpu /></div>
+              <div className="message-content">
+                <div className="typing-indicator">
+                  <span></span>
+                  <span></span>
+                  <span></span>
                 </div>
-              ))}
+              </div>
             </div>
-          </div>
+          )}
+          <div ref={messagesEndRef} />
+        </div>
 
-          <div className="ai-capabilities">
-            <h3 className="sidebar-title">What I Can Do</h3>
-            <ul className="capabilities-list">
-              <li>📊 Analyze performance trends across schools</li>
-              <li>🎯 Identify at-risk students needing support</li>
-              <li>📈 Generate detailed performance reports</li>
-              <li>💡 Provide actionable recommendations</li>
-              <li>🔍 Find patterns in learning behaviors</li>
-              <li>📅 Predict future performance trends</li>
-            </ul>
+        {/* Input Section */}
+        <div className="chat-input-section">
+          {error && (
+            <div className="chat-error">
+              <FiAlertCircle />
+              <span>{error}</span>
+            </div>
+          )}
+          <div className="chat-input-wrapper">
+            <textarea
+              value={inputMessage}
+              onChange={(e) => setInputMessage(e.target.value)}
+              onKeyPress={handleKeyPress}
+              placeholder="Ask about student activity, attendance, or performance..."
+              className="chat-input"
+              rows="2"
+              disabled={!sessionId || isLoading}
+            />
+            <button 
+              onClick={handleSendMessage}
+              className="send-button"
+              disabled={!inputMessage.trim() || !sessionId || isLoading}
+            >
+              <FiSend />
+            </button>
           </div>
+          <div className="input-hints">
+            <span>Try: "How many students are active today?"</span>
+            <span>•</span>
+            <span>"Show me the earliest data available"</span>
+            <span>•</span>
+            <span>"What's the total count of teachers?"</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Sample Questions */}
+      <div className="sample-questions">
+        <h3>Quick Questions</h3>
+        <div className="questions-grid">
+          {[
+            "How many active students are there today?",
+            "What's the earliest date in our data?",
+            "Show me teacher activity statistics",
+            "How many total students do we have?",
+            "What's the data range available?",
+            "Show activity trends for this week"
+          ].map((question, index) => (
+            <button
+              key={index}
+              className="question-chip"
+              onClick={() => setInputMessage(question)}
+            >
+              {question}
+            </button>
+          ))}
         </div>
       </div>
     </div>
