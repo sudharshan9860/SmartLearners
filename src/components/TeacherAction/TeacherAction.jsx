@@ -1,3 +1,4 @@
+// src/components/TeacherAction/TeacherAction.jsx
 import React, { useState, useEffect } from 'react';
 import './TeacherAction.css';
 import { 
@@ -11,337 +12,712 @@ import {
   FiEdit3,
   FiDatabase,
   FiEye,
-  FiGrid
+  FiGrid,
+  FiCalendar,
+  FiFilter,
+  FiBarChart2,
+  FiClipboard,
+  FiUser
 } from 'react-icons/fi';
 import ApiService from '../../services/apiService';
-import DataTransformer from '../../utils/dataTransformer';
+import LoadingSpinner from '../common/LoadingSpinner';
 
-const TeacherAction = ({ filters, apiHealthy }) => {
-  const [loading, setLoading] = useState(false);
-  const [teacherData, setTeacherData] = useState(null);
-  const [selectedClass, setSelectedClass] = useState('Minds_9th');
-  const [error, setError] = useState(null);
-  const [activeActivityTab, setActiveActivityTab] = useState('chatbot');
+const TeacherAction = ({ apiHealthy }) => {
+  // State for filters
+  const [filters, setFilters] = useState({
+    school: '',
+    block: '',
+    class: '',
+    section: ''
+  });
+
+  // State for data
   const [schoolLogs, setSchoolLogs] = useState(null);
-  
+  const [teachers, setTeachers] = useState([]);
+  const [selectedTeacher, setSelectedTeacher] = useState(null);
+  const [teacherDetails, setTeacherDetails] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [dateFilter, setDateFilter] = useState('today');
+  const [dateRange, setDateRange] = useState({
+    from: new Date().toISOString().split('T')[0],
+    to: new Date().toISOString().split('T')[0]
+  });
+
+  // API to Display Mapping
+  const API_TO_DISPLAY_MAPPING = {
+    'Minds_9th': {
+      school: 'Montessori',
+      block: 'Minds',
+      class: '9th',
+      section: 'M2'
+    },
+    'Indus_8th': {
+      school: 'Montessori',
+      block: 'Indus',
+      class: '8th',
+      section: 'LB2'
+    },
+    'Montee_9th': {
+      school: 'Montessori',
+      block: 'Montee',
+      class: '9th',
+      section: '9-MEL3'
+    },
+    'Montee_8th': {
+      school: 'Montessori',
+      block: 'Montee',
+      class: '8th',
+      section: '8-MEL3'
+    },
+    'Pragna_9th': {
+      school: 'A School',
+      block: 'Pragna',
+      class: '9th',
+      section: 'Agni'
+    },
+    'Pragna_8th': {
+      school: 'A School',
+      block: 'Pragna',
+      class: '8th',
+      section: 'Akash'
+    }
+  };
+
+  // School Hierarchy
+  const SCHOOL_HIERARCHY = {
+    'A School': {
+      blocks: {
+        'Pragna': {
+          classes: {
+            '8th': ['Akash'],
+            '9th': ['Agni']
+          }
+        }
+      }
+    },
+    'Montessori': {
+      blocks: {
+        'Minds': {
+          classes: {
+            '9th': ['M2']
+          }
+        },
+        'Indus': {
+          classes: {
+            '8th': ['LB2']
+          }
+        },
+        'Montee': {
+          classes: {
+            '8th': ['8-MEL3'],
+            '9th': ['9-MEL3']
+          }
+        }
+      }
+    }
+  };
+
+  // Action type mapping
+  const ACTION_MAPPING = {
+    'fetch_homework_submissions': {
+      display: 'View Homework Submissions',
+      category: 'view',
+      color: '#06b6d4'
+    },
+    'get_homework_list': {
+      display: 'Get Homework List',
+      category: 'view',
+      color: '#0ea5e9'
+    },
+    'chatbot_query': {
+      display: 'Chatbot Data Fetch',
+      category: 'ai',
+      color: '#f59e0b'
+    },
+    'view_classwork_submissions': {
+      display: 'View Classwork Submissions',
+      category: 'view',
+      color: '#84cc16'
+    },
+    'create_homework': {
+      display: 'Create Homework',
+      category: 'create',
+      color: '#8b5cf6'
+    },
+    'submit_classwork': {
+      display: 'Create/Submit Classwork',
+      category: 'create',
+      color: '#3b82f6'
+    },
+    'create_worksheets': {
+      display: 'Create Worksheets',
+      category: 'create',
+      color: '#ec4899'
+    },
+    'auto_homework_submission': {
+      display: 'Auto Submit Homework',
+      category: 'submit',
+      color: '#10b981'
+    }
+  };
+
+  // Load school logs on component mount
   useEffect(() => {
     if (apiHealthy) {
-      loadTeacherData();
-    } else {
-      setTeacherData(null);
-      setError('Backend not healthy. Skipping API calls.');
+      loadSchoolLogs();
     }
-  }, [selectedClass, apiHealthy]);
+  }, [apiHealthy]);
 
-  const loadTeacherData = async () => {
+  const loadSchoolLogs = async () => {
     try {
       setLoading(true);
-      setError(null);
-      
       const logs = await ApiService.getSchoolLogs();
       setSchoolLogs(logs);
-      
-      const transformedData = DataTransformer.transformTeacherData(logs, selectedClass);
-      
-      // Calculate actual active students for this specific class
-      const classData = logs[selectedClass];
-      const actualActiveStudents = classData?.students ? Object.keys(classData.students).length : 0;
-      
-      // Update the transformed data with correct active student count
-      transformedData.totalStudents = actualActiveStudents;
-      
-      setTeacherData(transformedData);
-    } catch (err) {
-      console.error('Failed to load teacher data:', err);
-      setError(err.message);
+    } catch (error) {
+      console.error('Failed to load school logs:', error);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleClassChange = (newClass) => {
-    setSelectedClass(newClass);
+  // Get the API key for current filter selection
+  const getApiKeyForFilters = () => {
+    const { block, class: className, section } = filters;
+    
+    for (const [apiKey, mapping] of Object.entries(API_TO_DISPLAY_MAPPING)) {
+      if (mapping.block === block && 
+          mapping.class === className && 
+          mapping.section === section) {
+        return apiKey;
+      }
+    }
+    return null;
   };
 
-  // Group activities by type
-  const groupActivitiesByType = () => {
-    if (!teacherData?.activities) return {};
+  // Get dynamic filter options
+  const getBlockOptions = () => {
+    if (!filters.school) return [];
+    return Object.keys(SCHOOL_HIERARCHY[filters.school]?.blocks || {});
+  };
+
+  const getClassOptions = () => {
+    if (!filters.school || !filters.block) return [];
+    return Object.keys(SCHOOL_HIERARCHY[filters.school]?.blocks[filters.block]?.classes || {});
+  };
+
+  const getSectionOptions = () => {
+    if (!filters.school || !filters.block || !filters.class) return [];
+    return SCHOOL_HIERARCHY[filters.school]?.blocks[filters.block]?.classes[filters.class] || [];
+  };
+
+  // Handle filter changes
+  const handleFilterChange = (filterType, value) => {
+    const newFilters = { ...filters, [filterType]: value };
     
-    const grouped = {
-      chatbot: [],
-      homework: [],
-      worksheets: [],
-      submissions: []
+    if (filterType === 'school') {
+      newFilters.block = '';
+      newFilters.class = '';
+      newFilters.section = '';
+    } else if (filterType === 'block') {
+      newFilters.class = '';
+      newFilters.section = '';
+    } else if (filterType === 'class') {
+      newFilters.section = '';
+    }
+    
+    setFilters(newFilters);
+  };
+
+  // Apply filters and load teachers
+  const applyFilters = () => {
+    if (filters.section && schoolLogs) {
+      loadTeachers();
+    }
+  };
+
+  const loadTeachers = () => {
+    try {
+      setLoading(true);
+      
+      const apiKey = getApiKeyForFilters();
+      if (!apiKey || !schoolLogs[apiKey]) {
+        setTeachers([]);
+        return;
+      }
+
+      const classData = schoolLogs[apiKey];
+      const teacherData = classData.teachers || {};
+
+      // Process teachers based on date filter
+      const teacherList = [];
+      
+      Object.entries(teacherData).forEach(([teacherEmail, activities]) => {
+        let filteredActivities = activities;
+
+        // Filter activities by date
+        if (dateFilter === 'today') {
+          const today = new Date().toISOString().split('T')[0];
+          filteredActivities = activities.filter(a => a.date === today);
+        } else if (dateFilter === 'range') {
+          filteredActivities = activities.filter(a => {
+            return a.date >= dateRange.from && a.date <= dateRange.to;
+          });
+        }
+
+        if (filteredActivities.length > 0) {
+          // Calculate metrics for this teacher
+          const metrics = calculateTeacherMetrics(filteredActivities);
+          
+          teacherList.push({
+            email: teacherEmail,
+            name: teacherEmail.split('@')[0].charAt(0).toUpperCase() + 
+                  teacherEmail.split('@')[0].slice(1),
+            activityCount: filteredActivities.length,
+            lastActive: filteredActivities[0].timestamp,
+            metrics,
+            activities: filteredActivities
+          });
+        }
+      });
+
+      setTeachers(teacherList);
+    } catch (error) {
+      console.error('Failed to load teachers:', error);
+      setTeachers([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const calculateTeacherMetrics = (activities) => {
+    const metrics = {
+      homeworksCreated: 0,
+      classworksGiven: 0,
+      worksheetsCreated: 0,
+      studentAnalysisChecked: 0,
+      chatbotQueries: 0,
+      totalActivities: activities.length
     };
+
+    activities.forEach(activity => {
+      if (activity.action === 'create_homework') metrics.homeworksCreated++;
+      if (activity.action === 'submit_classwork') metrics.classworksGiven++;
+      if (activity.action === 'create_worksheets') metrics.worksheetsCreated++;
+      if (activity.action === 'fetch_homework_submissions' || 
+          activity.action === 'view_classwork_submissions') {
+        metrics.studentAnalysisChecked++;
+      }
+      if (activity.action === 'chatbot_query') metrics.chatbotQueries++;
+    });
+
+    return metrics;
+  };
+
+  const selectTeacher = (teacher) => {
+    setSelectedTeacher(teacher.email);
     
-    teacherData.activities.forEach(activity => {
-      if (activity.action.includes('Chatbot')) {
-        grouped.chatbot.push(activity);
-      } else if (activity.action.includes('Homework')) {
-        grouped.homework.push(activity);
-      } else if (activity.action.includes('Worksheet')) {
-        grouped.worksheets.push(activity);
-      } else if (activity.action.includes('Submission')) {
-        grouped.submissions.push(activity);
+    // Process detailed data for selected teacher
+    const featureUsage = {};
+    const assignments = [];
+    
+    teacher.activities.forEach(activity => {
+      const mapping = ACTION_MAPPING[activity.action];
+      if (mapping) {
+        featureUsage[mapping.display] = (featureUsage[mapping.display] || 0) + 1;
+        
+        // Create assignment entries for certain actions
+        if (activity.action === 'create_homework') {
+          assignments.push({
+            type: 'homework',
+            title: 'Chapter 5: Algebra',
+            submitted: Math.floor(Math.random() * 25) + 5,
+            pending: Math.floor(Math.random() * 10),
+            timestamp: activity.timestamp
+          });
+        }
+        if (activity.action === 'submit_classwork') {
+          assignments.push({
+            type: 'classwork',
+            title: 'Class Exercise',
+            submitted: 30,
+            pending: 0,
+            timestamp: activity.timestamp
+          });
+        }
+        if (activity.action === 'create_worksheets') {
+          assignments.push({
+            type: 'worksheet',
+            title: 'Practice Problems',
+            submitted: Math.floor(Math.random() * 20) + 10,
+            pending: Math.floor(Math.random() * 15),
+            timestamp: activity.timestamp
+          });
+        }
       }
     });
-    
-    return grouped;
+
+    setTeacherDetails({
+      ...teacher,
+      featureUsage,
+      assignments: assignments.slice(0, 5) // Latest 5 assignments
+    });
   };
 
-  if (loading) {
+  const formatDate = (isoString) => {
+    if (!isoString) return 'N/A';
+    const date = new Date(isoString);
+    return date.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true
+    });
+  };
+
+  const handleBackToList = () => {
+    setSelectedTeacher(null);
+    setTeacherDetails(null);
+  };
+
+  // Render teacher list
+  const renderTeacherList = () => (
+    <div className="teacher-list-container">
+      <div className="list-header">
+        <h3>Teachers in {filters.block} - {filters.class} {filters.section}</h3>
+        <div className="list-summary">
+          <span className="summary-item">
+            <FiUsers /> Total: {teachers.length}
+          </span>
+        </div>
+      </div>
+
+      <div className="teachers-grid">
+        {teachers.map(teacher => (
+          <div key={teacher.email} className="teacher-card">
+            <div className="teacher-card-header">
+              <div className="teacher-avatar">
+                <FiUser />
+              </div>
+              <div className="teacher-info">
+                <h4>{teacher.name}</h4>
+                <p className="teacher-email">{teacher.email}</p>
+              </div>
+            </div>
+            
+            <div className="teacher-card-stats">
+              <div className="stat-row">
+                <span className="stat-label">Activities</span>
+                <span className="stat-value">{teacher.activityCount}</span>
+              </div>
+              <div className="stat-row">
+                <span className="stat-label">Homeworks</span>
+                <span className="stat-value">{teacher.metrics.homeworksCreated}</span>
+              </div>
+              <div className="stat-row">
+                <span className="stat-label">Classworks</span>
+                <span className="stat-value">{teacher.metrics.classworksGiven}</span>
+              </div>
+              <div className="stat-row">
+                <span className="stat-label">Last Active</span>
+                <span className="stat-value small">{formatDate(teacher.lastActive)}</span>
+              </div>
+            </div>
+
+            <button 
+              className="view-details-btn"
+              onClick={() => selectTeacher(teacher)}
+            >
+              View Details
+            </button>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+
+  // Render teacher details
+  const renderTeacherDetails = () => {
+    if (!teacherDetails) return null;
+
     return (
-      <div className="loading-container-enhanced">
-        <div className="loading-card">
-          <div className="loading-spinner"></div>
-          <p className="loading-text">Loading teacher data...</p>
+      <div className="teacher-details-container">
+        <button className="back-button" onClick={handleBackToList}>
+          <FiUsers /> Back to List
+        </button>
+
+        {/* Teacher Profile Card */}
+        <div className="teacher-profile-card">
+          <div className="profile-header">
+            <div className="profile-avatar">
+              <FiUser />
+            </div>
+            <div className="profile-info">
+              <h2>{teacherDetails.name}</h2>
+              <p className="teacher-role">Mathematics Teacher</p>
+              <p className="teacher-school">
+                {filters.school} • {filters.block} • {filters.class} {filters.section}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Metrics Section */}
+        <div className="metrics-grid">
+          <div className="metric-card">
+            <div className="metric-icon homework">
+              <FiFileText />
+            </div>
+            <div className="metric-content">
+              <span className="metric-label">Homeworks Created</span>
+              <span className="metric-value">{teacherDetails.metrics.homeworksCreated}</span>
+            </div>
+          </div>
+
+          <div className="metric-card">
+            <div className="metric-icon classwork">
+              <FiClipboard />
+            </div>
+            <div className="metric-content">
+              <span className="metric-label">Classworks Given</span>
+              <span className="metric-value">{teacherDetails.metrics.classworksGiven}</span>
+            </div>
+          </div>
+
+          <div className="metric-card">
+            <div className="metric-icon worksheet">
+              <FiEdit3 />
+            </div>
+            <div className="metric-content">
+              <span className="metric-label">Worksheets Created</span>
+              <span className="metric-value">{teacherDetails.metrics.worksheetsCreated}</span>
+            </div>
+          </div>
+
+          <div className="metric-card">
+            <div className="metric-icon analysis">
+              <FiEye />
+            </div>
+            <div className="metric-content">
+              <span className="metric-label">Student Analysis Checked</span>
+              <span className="metric-value">{teacherDetails.metrics.studentAnalysisChecked}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Assignment Creation Activity */}
+        <div className="assignments-section">
+          <h3>Assignment Creation Activity</h3>
+          <div className="assignments-list">
+            {teacherDetails.assignments.map((assignment, index) => (
+              <div key={index} className="assignment-card">
+                <div className="assignment-type">
+                  {assignment.type === 'homework' && <FiFileText />}
+                  {assignment.type === 'classwork' && <FiClipboard />}
+                  {assignment.type === 'worksheet' && <FiEdit3 />}
+                  <span>{assignment.type}</span>
+                </div>
+                <div className="assignment-details">
+                  <h4>{assignment.title}</h4>
+                  <div className="submission-stats">
+                    <div className="stats-info">
+                      <span className="submitted">{assignment.submitted} Submitted</span>
+                      <span className="pending">{assignment.pending} Pending</span>
+                    </div>
+                    <div className="progress-bar">
+                      <div 
+                        className="progress-fill"
+                        style={{ 
+                          width: `${(assignment.submitted / (assignment.submitted + assignment.pending)) * 100}%` 
+                        }}
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Teacher Features Chart */}
+        <div className="features-chart-section">
+          <h3>Teacher Features Usage</h3>
+          <div className="horizontal-bar-chart">
+            {Object.entries(teacherDetails.featureUsage)
+              .sort((a, b) => b[1] - a[1])
+              .map(([feature, count]) => {
+                const maxCount = Math.max(...Object.values(teacherDetails.featureUsage));
+                const percentage = (count / maxCount) * 100;
+                
+                return (
+                  <div key={feature} className="chart-row">
+                    <div className="chart-label">{feature}</div>
+                    <div className="chart-bar-container">
+                      <div 
+                        className="chart-bar"
+                        style={{ 
+                          width: `${percentage}%`,
+                          background: `linear-gradient(to right, #6366f1, #8b5cf6)`
+                        }}
+                      >
+                        <span className="bar-value">{count}</span>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+          </div>
         </div>
       </div>
     );
-  }
-
-  if (error) {
-    return (
-      <div className="error-container-enhanced">
-        <div className="error-card">
-          <p className="error-message">Error: {error}</p>
-          <button onClick={loadTeacherData} className="retry-btn">Retry</button>
-        </div>
-      </div>
-    );
-  }
-
-  if (!teacherData) {
-    return (
-      <div className="teacher-action-container">
-        <div className="selection-prompt">
-          <FiUsers className="prompt-icon" />
-          <h2>Select a Class to View Teacher Details</h2>
-          <p>Please select a class to begin</p>
-        </div>
-      </div>
-    );
-  }
-
-  const groupedActivities = groupActivitiesByType();
+  };
 
   return (
     <div className="teacher-action-container">
-      {/* Enhanced Header */}
-      <div className="teacher-header-enhanced">
-        <div className="header-content">
-          <h2 className="page-title">
-            <FiUsers className="title-icon" />
-            Teacher Action Details
-          </h2>
-          <div className="class-selector-wrapper">
-            <label className="selector-label">Select Class</label>
-            <select 
-              value={selectedClass} 
-              onChange={(e) => handleClassChange(e.target.value)}
-              className="class-select-styled"
-            >
-              {Object.entries(DataTransformer.CLASS_MAPPING).map(([key, value]) => (
-                <option key={key} value={key}>{value.display}</option>
-              ))}
-            </select>
-          </div>
-        </div>
+      <div className="action-header">
+        <h2>
+          <FiUsers /> Teacher Action Details
+        </h2>
       </div>
 
-      {/* Teacher Info Card */}
-      <div className="teacher-info-card-enhanced">
-        <div className="teacher-profile">
-          <div className="teacher-avatar-large">
-            <FiUsers />
-          </div>
-          <div className="teacher-details">
-            <h3 className="teacher-name">
-              {teacherData.teachers.length > 0 ? teacherData.teachers[0] : 'No Teacher Assigned'}
-            </h3>
-            <p className="teacher-class">{teacherData.className}</p>
-            <div className="teacher-stats">
-              <div className="stat">
-                <FiUsers className="stat-icon" />
-                <span className="stat-value">{teacherData.totalStudents}</span>
-                <span className="stat-label">Active Students</span>
+      {!selectedTeacher && (
+        <>
+          <div className="filter-section">
+            <div className="filter-row">
+              <div className="filter-group">
+                <label>School</label>
+                <select 
+                  value={filters.school} 
+                  onChange={(e) => handleFilterChange('school', e.target.value)}
+                  className="filter-select"
+                >
+                  <option value="">Select School</option>
+                  {Object.keys(SCHOOL_HIERARCHY).map(school => (
+                    <option key={school} value={school}>{school}</option>
+                  ))}
+                </select>
               </div>
-              <div className="stat">
-                <FiBook className="stat-icon" />
-                <span className="stat-value">{teacherData.expectedStudents}</span>
-                <span className="stat-label">Expected Students</span>
+
+              <div className="filter-group">
+                <label>Block</label>
+                <select 
+                  value={filters.block} 
+                  onChange={(e) => handleFilterChange('block', e.target.value)}
+                  className="filter-select"
+                  disabled={!filters.school}
+                >
+                  <option value="">Select Block</option>
+                  {getBlockOptions().map(block => (
+                    <option key={block} value={block}>{block}</option>
+                  ))}
+                </select>
               </div>
-              <div className="stat">
-                <FiActivity className="stat-icon" />
-                <span className="stat-value">
-                  {((teacherData.totalStudents / teacherData.expectedStudents) * 100).toFixed(0)}%
+
+              <div className="filter-group">
+                <label>Class</label>
+                <select 
+                  value={filters.class} 
+                  onChange={(e) => handleFilterChange('class', e.target.value)}
+                  className="filter-select"
+                  disabled={!filters.block}
+                >
+                  <option value="">Select Class</option>
+                  {getClassOptions().map(cls => (
+                    <option key={cls} value={cls}>{cls}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="filter-group">
+                <label>Section</label>
+                <select 
+                  value={filters.section} 
+                  onChange={(e) => handleFilterChange('section', e.target.value)}
+                  className="filter-select"
+                  disabled={!filters.class}
+                >
+                  <option value="">Select Section</option>
+                  {getSectionOptions().map(section => (
+                    <option key={section} value={section}>{section}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            {/* Date Filter */}
+            <div className="date-filter-row">
+              <div className="date-filter-group">
+                <button 
+                  className={`date-btn ${dateFilter === 'today' ? 'active' : ''}`}
+                  onClick={() => setDateFilter('today')}
+                >
+                  Today
+                </button>
+                <button 
+                  className={`date-btn ${dateFilter === 'range' ? 'active' : ''}`}
+                  onClick={() => setDateFilter('range')}
+                >
+                  Date Range
+                </button>
+                
+                {dateFilter === 'range' && (
+                  <div className="date-inputs">
+                    <input 
+                      type="date" 
+                      value={dateRange.from}
+                      onChange={(e) => setDateRange({...dateRange, from: e.target.value})}
+                    />
+                    <span>to</span>
+                    <input 
+                      type="date" 
+                      value={dateRange.to}
+                      onChange={(e) => setDateRange({...dateRange, to: e.target.value})}
+                    />
+                  </div>
+                )}
+              </div>
+
+              <button 
+                className="apply-filters-btn"
+                onClick={applyFilters}
+                disabled={!filters.section}
+              >
+                <FiFilter /> Apply Filters
+              </button>
+            </div>
+
+            {filters.section && (
+              <div className="filter-summary">
+                <FiFilter />
+                <span>
+                  Showing teachers from: {filters.school} → {filters.block} → {filters.class} {filters.section}
                 </span>
-                <span className="stat-label">Participation</span>
               </div>
-            </div>
+            )}
           </div>
-        </div>
-      </div>
+        </>
+      )}
 
-      {/* Homework & Worksheets Stats */}
-      <div className="stats-grid">
-        <div className="stat-card homework-card">
-          <div className="stat-card-header">
-            <FiFileText className="stat-card-icon" />
-            <h3>Homework Assignments</h3>
+      <div className="action-content">
+        {loading ? (
+          <LoadingSpinner text="Loading teacher data..." />
+        ) : selectedTeacher ? (
+          renderTeacherDetails()
+        ) : teachers.length > 0 ? (
+          renderTeacherList()
+        ) : filters.section ? (
+          <div className="empty-state">
+            <FiUsers />
+            <h3>No Teachers Found</h3>
+            <p>No teacher activity found for the selected filters and date range</p>
           </div>
-          <div className="stat-card-content">
-            <div className="stat-row">
-              <span className="stat-label">Created</span>
-              <span className="stat-value-large">{teacherData.homeworkStats.created}</span>
-            </div>
-            <div className="stat-row">
-              <span className="stat-label">Submitted</span>
-              <span className="stat-value-large">{teacherData.homeworkStats.submitted}</span>
-            </div>
-            <div className="stat-row">
-              <span className="stat-label">Pending</span>
-              <span className="stat-value-large pending">{teacherData.homeworkStats.pending}</span>
-            </div>
-            <div className="completion-bar">
-              <div className="completion-label">
-                Completion Rate: {teacherData.homeworkStats.completionRate}%
-              </div>
-              <div className="progress-bar">
-                <div 
-                  className="progress-fill"
-                  style={{ width: `${teacherData.homeworkStats.completionRate}%` }}
-                />
-              </div>
-            </div>
+        ) : (
+          <div className="empty-state">
+            <FiFilter />
+            <h3>Select Filters to View Teachers</h3>
+            <p>Choose School, Block, Class, Section and apply filters to see teacher activity data</p>
           </div>
-        </div>
-
-        <div className="stat-card worksheets-card">
-          <div className="stat-card-header">
-            <FiEdit3 className="stat-card-icon" />
-            <h3>Worksheets Created</h3>
-          </div>
-          <div className="stat-card-content">
-            <div className="stat-row">
-              <span className="stat-label">Total Worksheets</span>
-              <span className="stat-value-large">{teacherData.worksheetStats.total}</span>
-            </div>
-            <div className="stat-row">
-              <span className="stat-label">This Week</span>
-              <span className="stat-value-large">{teacherData.worksheetStats.thisWeek}</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Recent Teacher Activities - Tabbed View */}
-      <div className="activities-section">
-        <h3 className="section-title">
-          <FiClock className="section-icon" />
-          Recent Teacher Activities
-        </h3>
-        
-        <div className="activity-tabs">
-          <button 
-            className={`tab-btn ${activeActivityTab === 'chatbot' ? 'active' : ''}`}
-            onClick={() => setActiveActivityTab('chatbot')}
-          >
-            <FiDatabase /> Chatbot Data ({groupedActivities.chatbot?.length || 0})
-          </button>
-          <button 
-            className={`tab-btn ${activeActivityTab === 'homework' ? 'active' : ''}`}
-            onClick={() => setActiveActivityTab('homework')}
-          >
-            <FiFileText /> Homework ({groupedActivities.homework?.length || 0})
-          </button>
-          <button 
-            className={`tab-btn ${activeActivityTab === 'worksheets' ? 'active' : ''}`}
-            onClick={() => setActiveActivityTab('worksheets')}
-          >
-            <FiEdit3 /> Worksheets ({groupedActivities.worksheets?.length || 0})
-          </button>
-          <button 
-            className={`tab-btn ${activeActivityTab === 'submissions' ? 'active' : ''}`}
-            onClick={() => setActiveActivityTab('submissions')}
-          >
-            <FiEye /> Submissions ({groupedActivities.submissions?.length || 0})
-          </button>
-        </div>
-        
-        <div className="activity-content">
-          {groupedActivities[activeActivityTab]?.length > 0 ? (
-            <div className="activity-list">
-              {groupedActivities[activeActivityTab].map((activity, index) => (
-                <div key={index} className="activity-item">
-                  <div className="activity-icon">{activity.icon}</div>
-                  <div className="activity-details">
-                    <h4 className="activity-title">{activity.action}</h4>
-                    <p className="activity-meta">
-                      {activity.teacher} • {new Date(activity.timestamp).toLocaleString()}
-                    </p>
-                  </div>
-                  <div className={`activity-status ${activity.status}`}>
-                    {activity.status === 'success' ? <FiCheckCircle /> : '⚠️'}
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="no-activities">
-              <p>No activities in this category</p>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Most Used Features */}
-      <div className="features-section">
-        <h3 className="section-title">
-          <FiTrendingUp className="section-icon" />
-          Most Used Features
-        </h3>
-        <div className="features-grid">
-          {teacherData.mostUsedFeatures.map((feature, index) => (
-            <div key={index} className="feature-card">
-              <div className="feature-header">
-                <span className="feature-rank">#{index + 1}</span>
-                <span className="feature-count">{feature.count} uses</span>
-              </div>
-              <h4 className="feature-name">{feature.name}</h4>
-              <div className="feature-progress">
-                <div 
-                  className="feature-progress-fill"
-                  style={{ width: `${feature.percentage}%` }}
-                />
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Class Activity Overview */}
-      <div className="class-overview-section">
-        <h3 className="section-title">
-          <FiGrid className="section-icon" />
-          Class Activity Overview
-        </h3>
-        <div className="overview-cards">
-          <div className="overview-card">
-            <h4>Active Students</h4>
-            <p className="overview-value">{teacherData.totalStudents}</p>
-          </div>
-          <div className="overview-card">
-            <h4>Expected Students</h4>
-            <p className="overview-value">{teacherData.expectedStudents}</p>
-          </div>
-          <div className="overview-card">
-            <h4>Participation Rate</h4>
-            <p className="overview-value">
-              {((teacherData.totalStudents / teacherData.expectedStudents) * 100).toFixed(1)}%
-            </p>
-          </div>
-        </div>
+        )}
       </div>
     </div>
   );

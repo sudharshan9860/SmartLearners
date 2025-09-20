@@ -1,4 +1,4 @@
-// Updated Overview.jsx - Real Data Only
+// src/components/Overview/Overview.jsx
 import React, { useState, useEffect } from 'react';
 import './Overview.css';
 import { 
@@ -8,10 +8,12 @@ import {
   FiActivity,
   FiBook,
   FiCpu,
-  FiClock
+  FiClock,
+  FiUsers
 } from 'react-icons/fi';
 import ApiService from '../../services/apiService';
 import DataTransformer from '../../utils/dataTransformer';
+import LoadingSpinner from '../common/LoadingSpinner';
 
 const Overview = ({ filters, apiHealthy }) => {
   const [loading, setLoading] = useState(true);
@@ -21,7 +23,7 @@ const Overview = ({ filters, apiHealthy }) => {
   useEffect(() => {
     if (apiHealthy) {
       loadDashboardData();
-      const interval = setInterval(loadDashboardData, 5 * 60 * 1000);
+      const interval = setInterval(loadDashboardData, 30 * 60 * 1000);
       return () => clearInterval(interval);
     } else {
       setError('Backend not healthy. Skipping API calls.');
@@ -33,10 +35,12 @@ const Overview = ({ filters, apiHealthy }) => {
     try {
       setLoading(true);
       setError(null);
+      
       const [dailyRollups, schoolLogs] = await Promise.all([
         ApiService.getDailyRollups(),
         ApiService.getSchoolLogs()
       ]);
+      
       const transformedData = DataTransformer.transformForOverview(dailyRollups, schoolLogs);
       setData(transformedData);
     } catch (err) {
@@ -48,16 +52,30 @@ const Overview = ({ filters, apiHealthy }) => {
   };
 
   const formatTime12Hour = (hour) => {
-    const period = hour >= 12 ? 'PM' : 'AM';
-    const displayHour = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour;
-    return `${displayHour}${period}`;
+    const hourNum = parseInt(hour.split(':')[0]);
+    const period = hourNum >= 12 ? 'PM' : 'AM';
+    const displayHour = hourNum === 0 ? 12 : hourNum > 12 ? hourNum - 12 : hourNum;
+    return `${displayHour} ${period}`;
+  };
+
+  const getParticipationColor = (rate) => {
+    if (rate >= 80) return '#10b981';
+    if (rate >= 60) return '#f59e0b';
+    if (rate >= 40) return '#3b82f6';
+    return '#ef4444';
+  };
+
+  const getRowStatus = (rate) => {
+    if (rate >= 80) return 'excellent';
+    if (rate >= 60) return 'good';
+    if (rate >= 40) return 'average';
+    return 'low';
   };
 
   if (loading) {
     return (
       <div className="loading-container">
-        <div className="loading-spinner"></div>
-        <p className="loading-text">Loading dashboard data...</p>
+        <LoadingSpinner text="Loading dashboard data..." />
       </div>
     );
   }
@@ -65,48 +83,26 @@ const Overview = ({ filters, apiHealthy }) => {
   if (error) {
     return (
       <div className="error-container">
-        <p className="error-message">Error loading data: {error}</p>
-        <button onClick={loadDashboardData} className="retry-btn">Retry</button>
+        <p className="error-message">⚠️ Error: {error}</p>
+        <button onClick={loadDashboardData} className="retry-button">
+          Retry
+        </button>
       </div>
     );
   }
 
   if (!data) {
-    return <div className="no-data">No data available</div>;
+    return <div className="no-data">📊 No data available</div>;
   }
 
-  const { insights, schoolStatistics } = data;
-
-  // Calculate total active students across all classes
-  const totalActiveStudents = schoolStatistics.reduce((sum, stat) => sum + stat.activeStudents, 0);
-
-  // Determine most active subject from actions
-  const getMostActiveSubject = () => {
-    // Based on action types, infer subject
-    // This is a simplified approach - you may need to enhance based on your data
-    const subjectMapping = {
-      'solve': 'Mathematics',
-      'create_worksheets': 'Science',
-      'submit_homework': 'Mathematics',
-      'concepts_required': 'Physics'
-    };
-    
-    return {
-      subject: 'Mathematics',
-      submissions: insights.mostActiveFeature.count || 3345
-    };
-  };
-
-  const mostActiveSubject = getMostActiveSubject();
+  const { insights, schoolStatistics, totalActiveStudents, totalActiveTeachers } = data;
 
   return (
     <div className="overview-container">
-      {/* Insights Dashboard */}
+      {/* Quick Insights Dashboard */}
       <div className="insights-dashboard">
-        <h2>💡 Insights Dashboard</h2>
-        
+        <h2>✨ Quick Insights</h2>
         <div className="insights-grid">
-          {/* Peak Activity Hour */}
           <div className="insight-card insight-purple animate-in">
             <div className="insight-icon-wrapper">
               <FiClock />
@@ -114,14 +110,12 @@ const Overview = ({ filters, apiHealthy }) => {
             <div className="insight-content">
               <p className="insight-label">PEAK ACTIVITY HOUR</p>
               <p className="insight-value">
-                {formatTime12Hour(parseInt(insights.peakActivityHour.time.split(':')[0]))} - 
-                {formatTime12Hour(parseInt(insights.peakActivityHour.time.split(':')[0]) + 1)}
+                {formatTime12Hour(insights.peakActivityHour.time)}
               </p>
-              <p className="insight-subtitle">{totalActiveStudents} active students</p>
+              <p className="insight-subtitle">{insights.peakActivityHour.students} active students</p>
             </div>
           </div>
 
-          {/* Top Performing School */}
           <div className="insight-card insight-yellow animate-in">
             <div className="insight-icon-wrapper">
               <FiActivity />
@@ -129,89 +123,118 @@ const Overview = ({ filters, apiHealthy }) => {
             <div className="insight-content">
               <p className="insight-label">TOP PERFORMING SCHOOL</p>
               <p className="insight-value">{insights.topPerformingSchool.schoolName}</p>
-              <p className="insight-subtitle">{insights.topPerformingSchool.engagementRate}% engagement rate</p>
             </div>
           </div>
 
-          {/* Most Active Subject */}
           <div className="insight-card insight-blue animate-in">
             <div className="insight-icon-wrapper">
               <FiBook />
             </div>
             <div className="insight-content">
               <p className="insight-label">MOST ACTIVE SUBJECT</p>
-              <p className="insight-value">{mostActiveSubject.subject}</p>
-              <p className="insight-subtitle">{mostActiveSubject.submissions} submissions today</p>
+              <p className="insight-value">{insights.mostActiveSubject.subject}</p>
+              <p className="insight-subtitle">{insights.mostActiveSubject.submissions} submissions today</p>
             </div>
           </div>
 
-          {/* AI Assistant Usage */}
           <div className="insight-card insight-green animate-in">
             <div className="insight-icon-wrapper">
               <FiCpu />
             </div>
             <div className="insight-content">
               <p className="insight-label">AI ASSISTANT USAGE</p>
-              <p className="insight-value">{insights.aiAssistantUsage.queriesResolved} queries</p>
-              <p className="insight-subtitle">resolved today</p>
+              <p className="insight-value">{insights.aiAssistantUsage.queries}</p>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Detailed School Statistics */}
-      <div className="school-statistics-section">
-        <h2>📊 Detailed School Statistics</h2>
+      {/* Detailed School Statistics Table - NEW CARD-BASED LAYOUT */}
+      <div className="statistics-section">
+        <div className="section-header">
+          <h2>📊 Detailed School Statistics</h2>
+          <div className="summary-badges">
+            <span className="badge badge-students">
+              <FiUsers /> {totalActiveStudents} Total Students
+            </span>
+            <span className="badge badge-teachers">
+              <FiUsers /> {totalActiveTeachers} Active Teachers
+            </span>
+          </div>
+        </div>
         
-        <div className="statistics-table-container">
-          <table className="statistics-table">
-            <thead>
-              <tr>
-                <th>SCHOOL</th>
-                <th>GRADE</th>
-                <th>ACTIVE STUDENTS</th>
-                <th>EXPECTED STUDENTS</th>
-                <th>PARTICIPATION RATE (%)</th>
-                <th>ACTIVE TEACHERS</th>
-              </tr>
-            </thead>
-            <tbody>
-              {schoolStatistics.map((stat, index) => (
-                <tr key={index} className={`stat-row ${stat.status}`}>
-                  <td className="school-name">
-                    <span className="school-text">{stat.schoolName}</span>
-                  </td>
-                  <td>
-                    <span className="grade-badge">{stat.grade}</span>
-                  </td>
-                  <td>
-                    <span className="active-count">{stat.activeStudents}</span>
-                  </td>
-                  <td>
-                    <span className="expected-count">{stat.expectedStudents}</span>
-                  </td>
-                  <td>
-                    <div className="participation-cell">
-                      <div className="participation-bar">
-                        <div 
-                          className="participation-fill"
-                          style={{ 
-                            width: `${stat.participationRate}%`,
-                            backgroundColor: stat.participationRate >= 80 ? '#10b981' :
-                                           stat.participationRate >= 60 ? '#f59e0b' : '#ef4444'
-                          }}
-                        />
-                      </div>
-                      <span className="participation-text">{stat.participationRate}%</span>
+        {/* Card-based Layout for Statistics */}
+        <div className="statistics-cards-container">
+          {schoolStatistics.map((stat, index) => (
+            <div key={index} className={`stat-card ${getRowStatus(stat.participationRate)}`}>
+              <div className="stat-card-header">
+                <div className="school-info">
+                  <h3 className="school-name">{stat.school}</h3>
+                  {stat.section && (
+                    <span className="school-section">{stat.section}</span>
+                  )}
+                </div>
+                <span className="grade-badge">{stat.grade}</span>
+              </div>
+              
+              <div className="stat-card-body">
+                <div className="stat-item">
+                  <span className="stat-label">Active Students</span>
+                  <span className="stat-value active-students">{stat.activeStudents}</span>
+                </div>
+                
+                <div className="stat-item">
+                  <span className="stat-label">Expected Students</span>
+                  <span className="stat-value expected-students">{stat.expectedStudents}</span>
+                </div>
+                
+                <div className="stat-item">
+                  <span className="stat-label">Participation Rate</span>
+                  <div className="participation-display">
+                    <span 
+                      className="stat-value participation-value"
+                      style={{ color: getParticipationColor(stat.participationRate) }}
+                    >
+                      {stat.participationRate.toFixed(1)}%
+                    </span>
+                    <div className="participation-bar">
+                      <div 
+                        className={`participation-fill ${getRowStatus(stat.participationRate)}`}
+                        style={{ width: `${stat.participationRate}%` }}
+                      />
                     </div>
-                  </td>
-                  <td>
-                    <span className="teacher-count">{stat.activeTeachers}</span>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                  </div>
+                </div>
+                
+                <div className="stat-item">
+                  <span className="stat-label">Active Teachers</span>
+                  <span className={`teacher-badge ${stat.activeTeachers > 0 ? 'active' : 'inactive'}`}>
+                    {stat.activeTeachers}
+                  </span>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Legend */}
+        <div className="table-legend">
+          <div className="legend-item">
+            <span className="legend-color excellent"></span>
+            <span>Excellent (≥80%)</span>
+          </div>
+          <div className="legend-item">
+            <span className="legend-color good"></span>
+            <span>Good (60-79%)</span>
+          </div>
+          <div className="legend-item">
+            <span className="legend-color average"></span>
+            <span>Average (40-59%)</span>
+          </div>
+          <div className="legend-item">
+            <span className="legend-color low"></span>
+            <span>Low (&lt;40%)</span>
+          </div>
         </div>
       </div>
     </div>
