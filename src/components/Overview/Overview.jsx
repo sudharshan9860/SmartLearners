@@ -9,7 +9,8 @@ import {
   FiBook,
   FiCpu,
   FiClock,
-  FiUsers
+  FiUsers,
+  FiCalendar
 } from 'react-icons/fi';
 import ApiService from '../../services/apiService';
 import DataTransformer from '../../utils/dataTransformer';
@@ -19,6 +20,11 @@ const Overview = ({ filters, apiHealthy }) => {
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState(null);
   const [error, setError] = useState(null);
+  const [dateFilter, setDateFilter] = useState('today');
+  const [dateRange, setDateRange] = useState({
+    startDate: new Date().toISOString().split('T')[0],
+    endDate: new Date().toISOString().split('T')[0]
+  });
 
   useEffect(() => {
     if (apiHealthy) {
@@ -29,7 +35,7 @@ const Overview = ({ filters, apiHealthy }) => {
       setError('Backend not healthy. Skipping API calls.');
       setLoading(false);
     }
-  }, [filters, apiHealthy]);
+  }, [filters, apiHealthy, dateFilter, dateRange]);
 
   const loadDashboardData = async () => {
     try {
@@ -51,11 +57,17 @@ const Overview = ({ filters, apiHealthy }) => {
     }
   };
 
-  const formatTime12Hour = (hour) => {
+  const formatTimeRange = (hour) => {
     const hourNum = parseInt(hour.split(':')[0]);
-    const period = hourNum >= 12 ? 'PM' : 'AM';
-    const displayHour = hourNum === 0 ? 12 : hourNum > 12 ? hourNum - 12 : hourNum;
-    return `${displayHour} ${period}`;
+    const nextHour = (hourNum + 1) % 24;
+    
+    const formatHour = (h) => {
+      const period = h >= 12 ? 'PM' : 'AM';
+      const displayHour = h === 0 ? 12 : h > 12 ? h - 12 : h;
+      return `${displayHour} ${period}`;
+    };
+    
+    return `${formatHour(hourNum)} - ${formatHour(nextHour)}`;
   };
 
   const getParticipationColor = (rate) => {
@@ -70,6 +82,14 @@ const Overview = ({ filters, apiHealthy }) => {
     if (rate >= 60) return 'good';
     if (rate >= 40) return 'average';
     return 'low';
+  };
+
+  const handleDateFilterChange = (filterType) => {
+    setDateFilter(filterType);
+    if (filterType === 'today') {
+      const today = new Date().toISOString().split('T')[0];
+      setDateRange({ startDate: today, endDate: today });
+    }
   };
 
   if (loading) {
@@ -110,7 +130,7 @@ const Overview = ({ filters, apiHealthy }) => {
             <div className="insight-content">
               <p className="insight-label">PEAK ACTIVITY HOUR</p>
               <p className="insight-value">
-                {formatTime12Hour(insights.peakActivityHour.time)}
+                {formatTimeRange(insights.peakActivityHour.time)}
               </p>
               <p className="insight-subtitle">{insights.peakActivityHour.students} active students</p>
             </div>
@@ -123,6 +143,7 @@ const Overview = ({ filters, apiHealthy }) => {
             <div className="insight-content">
               <p className="insight-label">TOP PERFORMING SCHOOL</p>
               <p className="insight-value">{insights.topPerformingSchool.schoolName}</p>
+              <p className="insight-subtitle">{insights.topPerformingSchool.engagementRate}% engagement</p>
             </div>
           </div>
 
@@ -144,23 +165,28 @@ const Overview = ({ filters, apiHealthy }) => {
             <div className="insight-content">
               <p className="insight-label">AI ASSISTANT USAGE</p>
               <p className="insight-value">{insights.aiAssistantUsage.queries}</p>
+              <p className="insight-subtitle">queries today</p>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Detailed School Statistics Table - NEW CARD-BASED LAYOUT */}
+      {/* Detailed School Statistics with Date Filter */}
       <div className="statistics-section">
         <div className="section-header">
-          <h2>📊 Detailed School Statistics</h2>
-          <div className="summary-badges">
-            <span className="badge badge-students">
-              <FiUsers /> {totalActiveStudents} Total Students
-            </span>
-            <span className="badge badge-teachers">
-              <FiUsers /> {totalActiveTeachers} Active Teachers
-            </span>
+          <div className="header-left">
+            <h2>📊 Detailed School Statistics</h2>
+            <div className="summary-badges">
+              <span className="badge badge-students">
+                <FiUsers /> {totalActiveStudents} Total Students
+              </span>
+              <span className="badge badge-teachers">
+                <FiUsers /> {totalActiveTeachers} Active Teachers
+              </span>
+            </div>
           </div>
+          
+         
         </div>
         
         {/* Card-based Layout for Statistics */}
@@ -168,73 +194,46 @@ const Overview = ({ filters, apiHealthy }) => {
           {schoolStatistics.map((stat, index) => (
             <div key={index} className={`stat-card ${getRowStatus(stat.participationRate)}`}>
               <div className="stat-card-header">
-                <div className="school-info">
-                  <h3 className="school-name">{stat.school}</h3>
-                  {stat.section && (
-                    <span className="school-section">{stat.section}</span>
-                  )}
-                </div>
-                <span className="grade-badge">{stat.grade}</span>
+                <h3 className="school-name">{stat.school}</h3>
+                <span className={`grade-badge grade-${stat.grade}`}>{stat.grade}</span>
               </div>
               
-              <div className="stat-card-body">
-                <div className="stat-item">
-                  <span className="stat-label">Active Students</span>
-                  <span className="stat-value active-students">{stat.activeStudents}</span>
+              <div className="stat-metrics">
+                <div className="metric">
+                  <span className="metric-label">ACTIVE STUDENTS</span>
+                  <span className="metric-value">{stat.activeStudents}</span>
                 </div>
-                
-                <div className="stat-item">
-                  <span className="stat-label">Expected Students</span>
-                  <span className="stat-value expected-students">{stat.expectedStudents}</span>
+                <div className="metric">
+                  <span className="metric-label">EXPECTED STUDENTS</span>
+                  <span className="metric-value">{stat.expectedStudents}</span>
                 </div>
-                
-                <div className="stat-item">
-                  <span className="stat-label">Participation Rate</span>
-                  <div className="participation-display">
-                    <span 
-                      className="stat-value participation-value"
-                      style={{ color: getParticipationColor(stat.participationRate) }}
-                    >
-                      {stat.participationRate.toFixed(1)}%
-                    </span>
-                    <div className="participation-bar">
-                      <div 
-                        className={`participation-fill ${getRowStatus(stat.participationRate)}`}
-                        style={{ width: `${stat.participationRate}%` }}
-                      />
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="stat-item">
-                  <span className="stat-label">Active Teachers</span>
-                  <span className={`teacher-badge ${stat.activeTeachers > 0 ? 'active' : 'inactive'}`}>
-                    {stat.activeTeachers}
+              </div>
+              
+              <div className="participation-section">
+                <div className="participation-header">
+                  <span className="participation-label">PARTICIPATION RATE</span>
+                  <span className="participation-value" style={{ color: getParticipationColor(stat.participationRate) }}>
+                    {stat.participationRate}%
                   </span>
                 </div>
+                <div className="participation-bar">
+                  <div 
+                    className="participation-fill"
+                    style={{ 
+                      width: `${stat.participationRate}%`,
+                      background: getParticipationColor(stat.participationRate)
+                    }}
+                  />
+                </div>
+              </div>
+              
+              <div className="teacher-metric">
+                <FiUsers className="teacher-icon" />
+                <span className="teacher-label">Active Teachers</span>
+                <span className="teacher-value">{stat.activeTeachers}</span>
               </div>
             </div>
           ))}
-        </div>
-
-        {/* Legend */}
-        <div className="table-legend">
-          <div className="legend-item">
-            <span className="legend-color excellent"></span>
-            <span>Excellent (≥80%)</span>
-          </div>
-          <div className="legend-item">
-            <span className="legend-color good"></span>
-            <span>Good (60-79%)</span>
-          </div>
-          <div className="legend-item">
-            <span className="legend-color average"></span>
-            <span>Average (40-59%)</span>
-          </div>
-          <div className="legend-item">
-            <span className="legend-color low"></span>
-            <span>Low (&lt;40%)</span>
-          </div>
         </div>
       </div>
     </div>

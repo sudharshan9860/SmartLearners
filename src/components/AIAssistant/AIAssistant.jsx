@@ -7,8 +7,6 @@ import {
   FiTrash2, 
   FiDatabase,
   FiClock,
-  FiMessageCircle,
-  FiActivity,
   FiAlertCircle,
   FiCheckCircle,
   FiUser,
@@ -98,12 +96,11 @@ const AIAssistant = ({ apiHealthy }) => {
       
       console.log('Received response:', response);
       
+      // Only use the answer from the response, ignore data and sql
       const botMessage = {
         id: Date.now() + 1,
         type: 'bot',
-        content: response.answer,
-        data: response.data,
-        sql: response.sql,
+        content: response.answer, // Only show the answer text
         timestamp: new Date(),
         dataFreshness: response.data_freshness
       };
@@ -151,8 +148,7 @@ const AIAssistant = ({ apiHealthy }) => {
   const handleSyncData = async () => {
     try {
       setIsLoading(true);
-      // You'll need to provide the actual API key or get it from config
-      const apiKey = 'admin-secret-key-123'; // Replace with actual API key management
+      const apiKey = 'admin-secret-key-123';
       await ApiService.triggerDataSync(apiKey);
       
       const syncMessage = {
@@ -163,7 +159,6 @@ const AIAssistant = ({ apiHealthy }) => {
       };
       setMessages(prev => [...prev, syncMessage]);
       
-      // Reload stats after sync
       setTimeout(loadChatStats, 5000);
     } catch (err) {
       console.error('Failed to sync data:', err);
@@ -217,28 +212,8 @@ const AIAssistant = ({ apiHealthy }) => {
         </div>
       </div>
 
-      {/* Stats Cards */}
+      {/* Stats Cards - Removed Active Students and Active Teachers, kept only Data Points and Freshness */}
       <div className="ai-stats-grid">
-        <div className="ai-stat-card">
-          <div className="stat-icon-wrapper blue">
-            <FiMessageCircle />
-          </div>
-          <div className="stat-content">
-            <span className="stat-label">Active Students</span>
-            <span className="stat-value">{chatStats?.total?.students || 0}</span>
-          </div>
-        </div>
-
-        <div className="ai-stat-card">
-          <div className="stat-icon-wrapper green">
-            <FiActivity />
-          </div>
-          <div className="stat-content">
-            <span className="stat-label">Active Teachers</span>
-            <span className="stat-value">{chatStats?.total?.teachers || 0}</span>
-          </div>
-        </div>
-
         <div className="ai-stat-card">
           <div className="stat-icon-wrapper purple">
             <FiDatabase />
@@ -278,18 +253,8 @@ const AIAssistant = ({ apiHealthy }) => {
                  <FiCheckCircle />}
               </div>
               <div className="message-content">
+                {/* Only show the message content text, no data or SQL */}
                 <div className="message-text">{message.content}</div>
-                {message.data && (
-                  <div className="message-data">
-                    <pre>{JSON.stringify(message.data, null, 2)}</pre>
-                  </div>
-                )}
-                {message.sql && (
-                  <details className="message-sql">
-                    <summary>View SQL Query</summary>
-                    <code>{message.sql}</code>
-                  </details>
-                )}
                 <span className="message-time">{formatTimestamp(message.timestamp)}</span>
               </div>
             </div>
@@ -350,28 +315,28 @@ const AIAssistant = ({ apiHealthy }) => {
         <h3>Quick Questions</h3>
         <div className="questions-grid">
           {[
-             "How many teachers are there?",
-        "From them, who was active today?",
-        "What did they do?",
-        "How many teachers created classwork?",
-        "Which teachers created classwork?",
-        "How many classwork were created?",
-        "Show me all classwork submissions",
-        "How many students were active today?",
-        "Which students were active today?",
-        "Who's using the AI chatbot today?",
-        "What homework was assigned today?",
-        "Show me teacher activities today",
-        "Which teachers reviewed homework today?",
-        "How many Grade 8 students used the Solve feature today?",
-        "Show me Grade 9 students who submitted homework today",
-        "List students in 8ILB who haven't been active this week",
-        "How many times did students use the chatbot today?",
-        "Which students used Auto-Correct today?",
-        "What did mohan@mmb do today?",
-        "Show me all teacher activities with counts",
-        "List those teachers",
-        "What are their IDs?"
+            "How many teachers are there?",
+            "From them, who was active today?",
+            "What did they do?",
+            "How many teachers created classwork?",
+            "Which teachers created classwork?",
+            "How many classwork were created?",
+            "Show me all classwork submissions",
+            "How many students were active today?",
+            "Which students were active today?",
+            "Who's using the AI chatbot today?",
+            "What homework was assigned today?",
+            "Show me teacher activities today",
+            "Which teachers reviewed homework today?",
+            "How many Grade 8 students used the Solve feature today?",
+            "Show me Grade 9 students who submitted homework today",
+            "List students in 8ILB who haven't been active this week",
+            "How many times did students use the chatbot today?",
+            "Which students used Auto-Correct today?",
+            "What did mohan@mmb do today?",
+            "Show me all teacher activities with counts",
+            "List those teachers",
+            "What are their IDs?"
           ].map((question, index) => (
             <button
               key={index}
